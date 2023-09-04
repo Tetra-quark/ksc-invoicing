@@ -1,5 +1,6 @@
 """
-Main script to create invoices. Parameters for euro/hour rate, number of hours worked, recipient, invoice date should be set here.
+Main script to create invoices. Parameters for euro/hour rate, number of hours worked, recipient,
+invoice date should be set here.
 """
 from pathlib import Path
 from datetime import datetime
@@ -22,8 +23,8 @@ INVOICE_DIRECTORY = '/Users/jeff/Personal/KSC/Invoices/tests'
 
 DATE = datetime(day=1, month=4, year=5000)
 
-
 # TODO maybe company name should be printed somewhere on the invoice... Currently only present in logo.
+
 
 def main():
     RECIPIENT = CLIENT_BOOK['BelleFerme']
