@@ -6,9 +6,6 @@ from borb.pdf.canvas.layout.layout_element import Alignment
 from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWidthTable
 from borb.pdf.canvas.layout.table.table import TableCell
 from borb.pdf.canvas.layout.page_layout.multi_column_layout import SingleColumnLayout
-from borb.pdf.canvas.color.color import RGBColor
-from borb.pdf.canvas.font.simple_font.true_type_font import TrueTypeFont
-from borb.pdf.canvas.font.font import Font
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf.pdf import PDF
 
@@ -16,109 +13,12 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from dataclasses import dataclass, field
 
-from .contactinfo import ContactInfo
-from .invoice import LineItem, Invoice
-
-# for french currency
-import locale
-
-locale.setlocale(locale.LC_ALL, 'fr_FR')
-
-CURRENCY_SYMBOL = "€"
-
-COLOR = {
-    'white': RGBColor(Decimal(1), Decimal(1), Decimal(1)),
-    'dark_blue': RGBColor(Decimal(0.14), Decimal(0.25), Decimal(0.445)),
-    'grey_blue': RGBColor(Decimal(0.9), Decimal(0.9), Decimal(0.95))
-}
-
-# TODO need to make this accessible from within the library... for other users.
-FONTBOOK = {
-    "sf-compact-rounded": "/System/Library/Fonts/SFCompactRounded.ttf",
-    "din-alternate-bold": "/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf",
-    "arial-rounded-bold": "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
-    "veranda": "/System/Library/Fonts/Supplemental/Verdana.ttf",
-    "trebuchet-ms": "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf"
-}
-
-
-def get_font(font='veranda'):
-    font_path = Path(FONTBOOK[font])
-    font: Font = TrueTypeFont.true_type_font_from_file(font_path)
-
-    return font
-
-
-FONT = get_font('sf-compact-rounded')
-FONT_BOLD = get_font('din-alternate-bold')
-
-
-class VerticalSpacer(FixedColumnWidthTable):
-    """Helper class to add vertical space of precise size to document."""
-
-    def __init__(self, size: Decimal = Decimal('0')):
-        super().__init__(number_of_rows=1, number_of_columns=1)
-        self.add(Paragraph(" "))
-        self.set_padding_on_all_cells(size, Decimal(1), Decimal(1), Decimal(1))
-        self.no_borders()
-
-
-@dataclass
-class TableSchema:
-    """Class to build borb table for invoice."""
-
-    tabledata: list[list[str]]
-    column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
-    bold_cells: list[tuple[int, int]]
-    double_cells: list[tuple[int, int]] = field(default_factory=lambda: [])  # list of double cells (merges right adjecent cell)
-
-    def __post_init__(self):
-
-        self.n_rows = len(self.tabledata)
-        self.n_cols = len(self.tabledata[0])
-
-        # validate string_rep
-        for row in self.tabledata[1:]:
-            if self.n_cols != len(row):
-                raise ValueError("The number of columns in the input table is inconsistent across rows.")
-
-        # validate column_widths
-        if self.n_cols != len(self.column_widths):
-            raise ValueError("Column widths specified do not match the input table.")
-
-    def build_table(self) -> FixedColumnWidthTable:
-        """Build borb table from a TableSchema Object."""
-
-        table = FixedColumnWidthTable(number_of_rows=self.n_rows,
-                                      number_of_columns=self.n_cols,
-                                      column_widths=self.column_widths)
-
-        self.populate_table(table)
-
-        # format table
-        table.set_padding_on_all_cells(Decimal(2), Decimal(2), Decimal(2), Decimal(2))
-        table.no_borders()
-        return table
-
-    def populate_table(self, table):
-
-        ignore_cells = []
-        for i, row in enumerate(self.tabledata):
-            for j, val in enumerate(row):
-
-                if (i, j) in ignore_cells:
-                    continue
-
-                font = FONT_BOLD if (i, j) in self.bold_cells else FONT
-                text = Paragraph(val, font=font)
-
-                if (i, j) in self.double_cells:
-                    table.add(TableCell(text, col_span=2))
-                    ignore_cells.append((i, j+1))
-                else:
-                    table.add(text)
+from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.invoice import LineItem, Invoice
+from kscinvoicing.pdf.tableschema import TableSchema
+from kscinvoicing.pdf.utils import VerticalSpacer, format_money
+from kscinvoicing.pdf.utils import FONT, FONT_BOLD, COLOR
 
 
 class InvoiceBuilder:
@@ -344,9 +244,3 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
         table.no_borders()
 
     return table
-
-
-def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
-    """Formats Decimal type for printing on invoice."""
-    fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
-    return f"{symbol} {fmtd_amount}"

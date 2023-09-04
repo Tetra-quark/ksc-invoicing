@@ -7,10 +7,10 @@ import subprocess  # for pdf show
 import json
 from decimal import Decimal
 
-from pdfinvoicing.address import Address
-from pdfinvoicing.contactinfo import ContactInfo
-from pdfinvoicing.invoice import LineItem, Invoice, InvoiceLogger
-from pdfinvoicing.invoicebuilder import InvoiceBuilder
+from kscinvoicing.info.address import Address
+from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.invoice import LineItem, Invoice, InvoiceLogger
+from kscinvoicing.pdf.invoicebuilder import InvoiceBuilder
 
 
 def invoice_data_from_json(path: str) -> dict:
@@ -20,7 +20,7 @@ def invoice_data_from_json(path: str) -> dict:
 
 
 def main():
-    data = invoice_data_from_json("./example_invoice_data.json")
+    data = invoice_data_from_json("invoice_config/gda_invoice_data.json")
     print(data)
 
     invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
