@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from kscadmin.address import Address
+from pdfinvoicing.address import Address
 
 
 # client can be a company or an individual but min requirements are: name, adress, email

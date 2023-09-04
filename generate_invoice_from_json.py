@@ -7,10 +7,10 @@ import subprocess  # for pdf show
 import json
 from decimal import Decimal
 
-from kscadmin.address import Address
-from kscadmin.contactinfo import ContactInfo
-from kscadmin.invoice import LineItem, Invoice, InvoiceLogger
-from kscadmin.invoicebuilder import InvoiceBuilder
+from pdfinvoicing.address import Address
+from pdfinvoicing.contactinfo import ContactInfo
+from pdfinvoicing.invoice import LineItem, Invoice, InvoiceLogger
+from pdfinvoicing.invoicebuilder import InvoiceBuilder
 
 
 def invoice_data_from_json(path: str) -> dict:

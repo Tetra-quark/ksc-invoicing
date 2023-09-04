@@ -72,7 +72,7 @@ class TableSchema:
     tabledata: list[list[str]]
     column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
     bold_cells: list[tuple[int, int]]
-    double_cells: list[tuple[int, int]] = field(default_factory=lambda: []) # list of double cells (merges right adjecent cell)
+    double_cells: list[tuple[int, int]] = field(default_factory=lambda: [])  # list of double cells (merges right adjecent cell)
 
     def __post_init__(self):
 
@@ -226,7 +226,7 @@ def build_invoice_info_schema(company_name: str, siren_number: str, invoice_numb
     """ Inserts a table with the bill number, todays date and optionally the due date."""
 
     if due_date:
-        due_date_label = "Due Date"
+        due_date_label = "Due Date"  # or "Date d'echeance"
         due_date_value = due_date.strftime('%d/%m/%Y')
     else:
         due_date_label = " "

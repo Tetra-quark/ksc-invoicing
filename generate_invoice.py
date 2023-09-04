@@ -6,10 +6,10 @@ from pathlib import Path
 from datetime import datetime
 import subprocess  # for pdf show
 
-from kscadmin.address import AddressFactory
-from kscadmin.contactinfo import ContactInfo
-from kscadmin.invoice import LineItem, Invoice, InvoiceLogger
-from kscadmin.invoicebuilder import InvoiceBuilder
+from pdfinvoicing.address import AddressFactory
+from pdfinvoicing.contactinfo import ContactInfo
+from pdfinvoicing.invoice import LineItem, Invoice, InvoiceLogger
+from pdfinvoicing.invoicebuilder import InvoiceBuilder
 
 from config import personal_details as SENDER
 from config import company_details as COMPANY
