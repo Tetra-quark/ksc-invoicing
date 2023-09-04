@@ -16,10 +16,10 @@ from pathlib import Path
 from datetime import datetime
 from typing import Optional
 from decimal import Decimal
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
-from kscadmin.contactinfo import ContactInfo
-from kscadmin.invoice import LineItem, Invoice
+from .contactinfo import ContactInfo
+from .invoice import LineItem, Invoice
 
 # for french currency
 import locale
@@ -72,6 +72,7 @@ class TableSchema:
     tabledata: list[list[str]]
     column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
     bold_cells: list[tuple[int, int]]
+    double_cells: list[tuple[int, int]] = field(default_factory=lambda: []) # list of double cells (merges right adjecent cell)
 
     def __post_init__(self):
 
@@ -103,20 +104,33 @@ class TableSchema:
 
     def populate_table(self, table):
 
+        ignore_cells = []
         for i, row in enumerate(self.tabledata):
             for j, val in enumerate(row):
+
+                if (i, j) in ignore_cells:
+                    continue
+
                 font = FONT_BOLD if (i, j) in self.bold_cells else FONT
-                table.add(Paragraph(val, font=font))
+                text = Paragraph(val, font=font)
+
+                if (i, j) in self.double_cells:
+                    table.add(TableCell(text, col_span=2))
+                    ignore_cells.append((i, j+1))
+                else:
+                    table.add(text)
 
 
 class InvoiceBuilder:
 
     def build_invoice(self,
                       siren_number: str,
+                      company_name: str,
                       sender: ContactInfo,
                       recipient: ContactInfo,
                       invoice: Invoice,
                       logopath: str,
+                      logo_width: int = 200,
                       footer_text: str = None) -> Document:
         """Main method to build invoice."""
         # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
@@ -124,33 +138,40 @@ class InvoiceBuilder:
         #  in the main script?
         #  What are the pros/cons of doing one over the other?
 
-        logo = Image(Path(logopath), width=Decimal(182), height=Decimal(50))
+        def get_image_dimensions(path) -> tuple[int, int]:
+            from PIL import Image as PILImage
+            logo_pil = PILImage.open(path)
+            return logo_pil.size
+
+        w, h = get_image_dimensions(logopath)
+        logo_height = logo_width * h // w
+
+        logo = Image(Path(logopath), width=Decimal(logo_width), height=Decimal(logo_height))
 
         contact_details_schema = build_contact_details_schema(sender, recipient)
         contact_details_table = contact_details_schema.build_table()
 
-        invoice_information_schema = build_invoice_info_schema(siren_number,
-                                                               invoice.invoice_number,
-                                                               invoice.date,
-                                                               invoice.due_date)
-
+        invoice_information_schema = build_invoice_info_schema(company_name=company_name,
+                                                               siren_number=siren_number,
+                                                               invoice_number=invoice.invoice_number,
+                                                               bill_date=invoice.date,
+                                                               due_date=invoice.due_date)
         invoice_information_table = invoice_information_schema.build_table()
 
         itemised_table = build_itemised_table(invoice.items)
 
-        totals_schema = build_totals_schema(invoice.subtotal,
-                                            invoice.total,
-                                            invoice.discount,
-                                            invoice.tax)
-
+        totals_schema = build_totals_schema(subtotal=invoice.subtotal,
+                                            total=invoice.total,
+                                            discount=invoice.discount,
+                                            tax=invoice.tax)
         totals_table = totals_schema.build_table()
 
-        pdf = self.build_invoice_document(logo,
-                                          contact_details_table,
-                                          invoice_information_table,
-                                          itemised_table,
-                                          totals_table,
-                                          footer_text)
+        pdf = self.build_invoice_document(logo=logo,
+                                          contact_details_table=contact_details_table,
+                                          invoice_information_table=invoice_information_table,
+                                          itemised_table=itemised_table,
+                                          totals_table=totals_table,
+                                          footer_text=footer_text)
 
         return pdf
 
@@ -200,7 +221,7 @@ def add_footer(page: Page, footer_text: str):
     footer.layout(page, rect)
 
 
-def build_invoice_info_schema(siren_number: str, invoice_number: str, bill_date: datetime,
+def build_invoice_info_schema(company_name: str, siren_number: str, invoice_number: str, bill_date: datetime,
                               due_date: Optional[datetime] = None) -> TableSchema:
     """ Inserts a table with the bill number, todays date and optionally the due date."""
 
@@ -212,16 +233,17 @@ def build_invoice_info_schema(siren_number: str, invoice_number: str, bill_date:
         due_date_value = " "
 
     # bill information
-    tabledata = [["SIREN ", siren_number, "Facture Nº", invoice_number],
-                 [" ", " ", "Date", bill_date.strftime('%d/%m/%Y')],
+    tabledata = [[company_name, " ", "Facture Nº", invoice_number],
+                 ["SIREN ", siren_number, "Date", bill_date.strftime('%d/%m/%Y')],
                  [" ", " ", due_date_label, due_date_value]]
 
     column_width_ratios = [Decimal(1), Decimal(5), Decimal(2), Decimal(2)]
 
     # specify cells to embolden
-    bold_cells = [(0, 0), *[(i, 2) for i in range(len(tabledata))]]
+    bold_cells = [*[(i, 0) for i in range(len(tabledata))], *[(i, 2) for i in range(len(tabledata))]]
+    double_cells = [(0, 0)]
 
-    tableschema = TableSchema(tabledata, column_width_ratios, bold_cells)
+    tableschema = TableSchema(tabledata, column_width_ratios, bold_cells, double_cells)
 
     return tableschema
 
