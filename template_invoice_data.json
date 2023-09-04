@@ -1,0 +1,46 @@
+{
+  "logo_path": null,
+  "save_location": null,
+  "invoice_date": null,
+  "footer_text": null,
+
+  "sender": {
+    "name": null,
+    "phone": null,
+    "email": null,
+    "website": null,
+    "company": null,
+    "siren": null,
+    "address": {
+      "number": null,
+      "street": null,
+      "postcode": null,
+      "city": null,
+      "country": null
+    }
+  },
+  "recipient": {
+    "name": null,
+    "phone": null,
+    "email": null,
+    "address": {
+      "number": null,
+      "street": null,
+      "postcode": null,
+      "city": null,
+      "country": null
+    }
+  },
+  "lineitem_details": [
+    {
+      "description": null,
+      "quantity": null,
+      "price_per_unit": null
+    },
+    {
+      "description": null,
+      "quantity": null,
+      "price_per_unit": null
+    }
+  ]
+}

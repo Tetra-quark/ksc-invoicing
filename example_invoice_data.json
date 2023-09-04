@@ -1,0 +1,46 @@
+{
+  "logo_path": "./example_logo.png",
+  "save_location": "./",
+  "invoice_date": "2023-09-04",
+  "footer_text": "Some legal text.",
+
+  "sender": {
+    "name": "Alice Sender",
+    "phone": "(+33) 0123456789",
+    "email": "alice@sender.com",
+    "website": null,
+    "company": "QuBit Technologies",
+    "siren": "123456789",
+    "address": {
+      "number": "",
+      "street": "Gower St",
+      "postcode": "WC1E 6BT",
+      "city": "London",
+      "country": "United Kingdom"
+    }
+  },
+  "recipient": {
+    "name": "Bob Recipient",
+    "phone": null,
+    "email": "bob@recipient.com",
+    "address": {
+      "number": "386",
+      "street": "Rte de Meyrin",
+      "postcode": "1217",
+      "city": "Meyrin",
+      "country": "Switzerland"
+    }
+  },
+  "lineitem_details": [
+    {
+      "description": "service 42",
+      "quantity": 3,
+      "price_per_unit": 50.00
+    },
+    {
+      "description": "product 505",
+      "quantity": 1,
+      "price_per_unit": 234
+    }
+  ]
+}
