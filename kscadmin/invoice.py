@@ -15,10 +15,6 @@ class LineItem:
         return self.quantity * self.price_per_unit
 
 
-def lineitem_from_dict(item: dict) -> LineItem:
-    return LineItem(**item)
-
-
 @dataclass
 class Invoice:
     """Class containing invoice information"""
