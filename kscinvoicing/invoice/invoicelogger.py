@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 import json
 
@@ -7,22 +7,26 @@ import json
 class InvoiceLogger:
 
     log_path: str
+    _invoice_number: str = field(init=False, repr=True)
 
-    @property
-    def invoice_number(self):
-        # TODO seperate invoice logging from the invoice class... pass invoice number to the invoice class.
-        """Get next invoice number by incrementing last invoice number from log file by one.
-        Or if not found it is first invoice."""
+    def __post_init__(self):
         try:
             with open(self.log_path, 'r') as log:
                 d = json.load(log)
                 prev_no = max([int(key) for key in d.keys()])
-                invoice_number = f"{prev_no + 1:04}"
+                self.invoice_number = f"{prev_no + 1:04}"
         except FileNotFoundError:
-            # TODO not a safe way to handle this.. file could be not found for many reasons..
-            invoice_number = "0001"
+            print(f"WARNING: {self.log_path} was not found. If you proceed to save the invoice draft it will be "
+                  f"created.")
+            self.invoice_number = "0001"
 
-        return invoice_number
+    @property
+    def invoice_number(self):
+        return self._invoice_number
+
+    @invoice_number.setter
+    def invoice_number(self, number: str):
+        self._invoice_number = number
 
     def log_invoice(self, date: datetime, sender: str, recipient: str, total: str):
 

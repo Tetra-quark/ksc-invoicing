@@ -20,8 +20,7 @@ def invoice_data_from_json(path: str) -> dict:
 
 
 def main():
-    data = invoice_data_from_json("invoice_config/gda_invoice_data.json")
-    print(data)
+    data = invoice_data_from_json("invoice_config/example_invoice_data.json")
 
     invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
 
