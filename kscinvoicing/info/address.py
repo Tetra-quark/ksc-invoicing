@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import sqlite3
 import re
 
 
@@ -13,10 +12,6 @@ class Address:
 
     def __str__(self) -> str:
         return f"{self.number} {self.street}\n{self.postcode} {self.city}, {self.country}"
-
-    def sql_add(self, connection: sqlite3.Connection):
-        sql = "INSERT INTO Addresses VALUES (?)"  # be carefull not specify the attributes is not great..
-        connection.execute(sql, (self.number, self.street, self.postcode, self.city, self.country))
 
     def address_lines(self) -> list:
         """Depends on the str method."""
