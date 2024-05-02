@@ -18,7 +18,7 @@ from kscinvoicing.info.contactinfo import ContactInfo
 from kscinvoicing.invoice import LineItem, Invoice
 from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import VerticalSpacer, format_money
-from kscinvoicing.pdf.utils import FONT, FONT_BOLD, COLOR
+from kscinvoicing.pdf.utils import FONT, FONT_BOLD, COLOR, get_font
 
 
 class InvoiceBuilder:
@@ -230,15 +230,43 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
 
         # color rows
         if row_num % 2 == 0:
-            c = COLOR['grey_blue']
+            c = COLOR['lighter_grey_blue']
         else:
-            c = COLOR['white']
+            c = COLOR['light_grey_blue']
 
         # row content
-        table.add(TableCell(Paragraph(item.description, font=FONT), background_color=c))
-        table.add(TableCell(Paragraph(str(item.quantity), font=FONT), background_color=c))
-        table.add(TableCell(Paragraph(format_money(item.price_per_unit), font=FONT), background_color=c))
-        table.add(TableCell(Paragraph(format_money(item.price()), font=FONT), background_color=c))
+        table.add(TableCell(
+            Paragraph(
+                item.description,
+                font=FONT,
+                horizontal_alignment=Alignment.LEFT,
+            ),
+            background_color=c),
+        )
+        table.add(TableCell(
+            Paragraph(
+                str(item.quantity),
+                font=FONT,
+                horizontal_alignment=Alignment.LEFT,
+            ),
+            background_color=c),
+        )
+        table.add(TableCell(
+            Paragraph(
+                format_money(item.price_per_unit),
+                font=FONT,
+                horizontal_alignment=Alignment.LEFT,
+            ),
+            background_color=c),
+        )
+        table.add(TableCell(
+            Paragraph(
+                format_money(item.price()),
+                font=FONT,
+                horizontal_alignment=Alignment.LEFT,
+            ),
+            background_color=c),
+        )
 
         table.set_padding_on_all_cells(Decimal(2), Decimal(2), Decimal(10), Decimal(2))
         table.no_borders()

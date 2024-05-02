@@ -11,12 +11,15 @@ from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWid
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
+locale._override_localeconv['n_sign_posn'] = 1
+
 CURRENCY_SYMBOL = "€"
 
 COLOR = {
     'white': RGBColor(Decimal(1), Decimal(1), Decimal(1)),
+    'light_grey_blue': RGBColor(Decimal(0.85), Decimal(0.85), Decimal(0.93)),
+    'lighter_grey_blue': RGBColor(Decimal(0.94), Decimal(0.94), Decimal(0.99)),
     'dark_blue': RGBColor(Decimal(0.14), Decimal(0.25), Decimal(0.445)),
-    'grey_blue': RGBColor(Decimal(0.9), Decimal(0.9), Decimal(0.95))
 }
 
 # TODO need to make this accessible from within the library... for other users.
@@ -25,14 +28,16 @@ FONTBOOK = {
     "din-alternate-bold": "/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf",
     "arial-rounded-bold": "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
     "veranda": "/System/Library/Fonts/Supplemental/Verdana.ttf",
-    "trebuchet-ms": "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf"
+    "trebuchet-ms": "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
+    "courrier": "/System/Library/Fonts/Supplemental/Courier New.ttf",
 }
 
 
 def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
     """Formats Decimal type for printing on invoice."""
     fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
-    return f"{symbol} {fmtd_amount}"
+    output = symbol + " " + fmtd_amount
+    return output
 
 
 def get_font(font='veranda'):
