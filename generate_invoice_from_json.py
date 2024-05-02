@@ -6,6 +6,7 @@ from datetime import datetime
 import subprocess  # for pdf show
 import json
 from decimal import Decimal
+import argparse
 
 from kscinvoicing.info.address import Address
 from kscinvoicing.info.contactinfo import ContactInfo
@@ -20,7 +21,12 @@ def invoice_data_from_json(path: str) -> dict:
 
 
 def main():
-    data = invoice_data_from_json("invoice_config/example_invoice_data.json")
+
+    parser = argparse.ArgumentParser(description="Generate invoice from json file.")
+    parser.add_argument("filepath", type=str, help="path to json file")
+    args = parser.parse_args()
+
+    data = invoice_data_from_json(args.filepath)
 
     invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
 
