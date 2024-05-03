@@ -20,6 +20,8 @@ from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import VerticalSpacer, format_money
 from kscinvoicing.pdf.utils import FONT, FONT_BOLD, COLOR, get_font
 
+import numpy as np
+
 
 class InvoiceBuilder:
 
@@ -33,6 +35,7 @@ class InvoiceBuilder:
                       logo_width: int = 200,
                       footer_text: str = None) -> Document:
         """Main method to build invoice."""
+
         # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
         #  Do have a master method that gets called once in main script or do I build the object method by method
         #  in the main script?
@@ -137,6 +140,8 @@ def build_invoice_info_schema(company_name: str, siren_number: str, invoice_numb
                  ["SIREN ", siren_number, "Date", bill_date.strftime('%d/%m/%Y')],
                  [" ", " ", due_date_label, due_date_value]]
 
+    tabledata = np.array(tabledata)
+
     column_width_ratios = [Decimal(1), Decimal(5), Decimal(2), Decimal(2)]
 
     # specify cells to embolden
@@ -155,13 +160,32 @@ def build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) ->
     #  implementation details of the ContactInfo class.. Two options: pass info as arguments, or split method and
     #  implement some of it in the ContactInfo class? or Invoice class? Inferfaces?
 
-    # sender and recipient personal information table layout
-    tabledata = [[f"Facturé par", " ", "Facturé à"],
-                 [sender.name, " ", recipient.name],
-                 [sender.address.line1, " ", recipient.address.line1],
-                 [sender.address.line2, " ", recipient.address.line2],
-                 [sender.phone, " ", recipient.email],
-                 [sender.email, " ", " "]]
+    def contactinfo_to_list(contact: ContactInfo) -> list:
+        """Put contact info object into a list to be inserted into invoice table."""
+        details = [contact.name, contact.address.line1, contact.address.line2]
+        if contact.phone is not None:
+            details.append(contact.phone)
+        if contact.email is not None:
+            details.append(contact.email)
+        return details
+
+    sender_details = contactinfo_to_list(sender)
+    recipient_details = contactinfo_to_list(recipient)
+
+    table_shape = (6, 3)  # (rows, columns)
+    tabledata = np.full(shape=table_shape, fill_value=" ", dtype="<U50")
+
+    tabledata[0][0] = "Facturé par"
+    tabledata[0][-1] = "Facturé à"
+
+    for i in range(1, table_shape[0]):
+
+        # sender details in first column
+        if len(sender_details):
+            tabledata[i][0] = sender_details.pop(0)
+        # recipient details in last column
+        if len(recipient_details):
+            tabledata[i][-1] = recipient_details.pop(0)
 
     # Bold headings
     bold_cells = [(0, 0), (0, 2)]

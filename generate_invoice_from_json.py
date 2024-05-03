@@ -40,7 +40,9 @@ def main():
     # create recipient
     recipient = ContactInfo(name=data['recipient']['name'],
                             address=Address(**data['recipient']['address']),
-                            email=data['recipient']['email'])
+                            email=data['recipient']['email'],
+                            phone=data['recipient']['phone'],
+                            )
 
     items = []
     for item in data['lineitem_details']:

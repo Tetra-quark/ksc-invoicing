@@ -6,12 +6,14 @@ from borb.pdf.canvas.layout.table.table import TableCell
 
 from kscinvoicing.pdf.utils import FONT, FONT_BOLD
 
+import numpy as np
+
 
 @dataclass
 class TableSchema:
     """Class to build borb table for invoice."""
 
-    tabledata: list[list[str]]
+    tabledata: np.ndarray
     column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
     bold_cells: list[tuple[int, int]]
     double_cells: list[tuple[int, int]] = field(default_factory=lambda: [])  # merges righthand cell with specified cell
