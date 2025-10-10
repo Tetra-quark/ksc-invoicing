@@ -1,6 +1,7 @@
 """
 Main script to create invoices. Parameters provided by json file, see template for examples.
 """
+import platform
 from pathlib import Path
 from datetime import datetime
 import subprocess  # for pdf show
@@ -75,7 +76,16 @@ def main():
     # Save draft and open pdf with Preview
     draftpath = invoices_path / f'DRAFT_{invoice_name}.pdf'
     builder.save_document(draftpath, pdf_invoice)
-    subprocess.run(['open', draftpath], check=True)
+
+    system = platform.system()
+    if system == "Windows":
+        subprocess.run(['start', draftpath], shell=True, check=True)
+    elif system == "Darwin":  # macOS
+        subprocess.run(['open', draftpath], check=True)
+    elif system == "Linux":
+        subprocess.run(['xdg-open', draftpath], check=True)
+    else:
+        print(f"Preview unavailable for OS: {system}. Please open the file manually: {draftpath}")
 
     response = input("Do you want to save this draft as an offcial invoice? (type 'yes' to save)\n")
     if response == "yes":
