@@ -21,7 +21,7 @@ conda activate kscinvoicing
 ## How to Use
 
 ```shell
-python generate_invoice_from_json.py invoice_config_file.json
+python generate_invoice_from_json.py example_config/invoice.json
 
 ```
 

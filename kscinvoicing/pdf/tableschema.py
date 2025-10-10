@@ -60,9 +60,7 @@ class TableSchema:
                     continue
 
                 font = STYLE.title_font if (i, j) in self.bold_cells else STYLE.primary_font
-
                 text = Paragraph(clean_text(val), font=font)
-                print(f"Text: {type(val)}, {val}")
 
                 if (i, j) in self.double_cells:
                     table.add(TableCell(text, col_span=2))
