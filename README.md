@@ -10,6 +10,14 @@ When I setup my freelance business - Koppanyi Scientific Consulting - under the 
 I needed to create invoices that were legally compliant. I thought it would be a fun software project to make a tool to 
 generate (and eventually manage) my invoices, while also giving them custom design. 
 
+## Installation
+
+```shell
+conda env create -f env.yaml
+conda activate kscinvoicing
+
+```
+
 ## How to Use
 
 ```shell
@@ -24,7 +32,7 @@ The fonts used here were obtained from [Google Fonts](https://fonts.google.com/?
 
 
 ## TODO
-- [ ] Add GUI
+- [ ] Update project to more recent version of Borb!
 
 ## Installation
 
