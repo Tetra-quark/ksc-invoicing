@@ -48,7 +48,7 @@ class StyleConfig:
 
 def load_style_config() -> StyleConfig:
     """Load style configuration from json file."""
-    style_path = "./invoice_config/style.json"
+    style_path = "./style.json"
     with open(style_path, "r") as file:
         style_cfg = json.load(file)
     style = StyleConfig(style_cfg)
