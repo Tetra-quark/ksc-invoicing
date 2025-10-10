@@ -1,4 +1,4 @@
-from borb.pdf.document import Document
+from borb.pdf.document.document import Document
 from borb.pdf.page.page import Page
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
 from borb.pdf.canvas.layout.image.image import Image
@@ -17,8 +17,12 @@ from decimal import Decimal
 from kscinvoicing.info.contactinfo import ContactInfo
 from kscinvoicing.invoice import LineItem, Invoice
 from kscinvoicing.pdf.tableschema import TableSchema
-from kscinvoicing.pdf.utils import VerticalSpacer, format_money
-from kscinvoicing.pdf.utils import FONT, FONT_BOLD, COLOR, get_font
+from kscinvoicing.pdf.utils import (
+    VerticalSpacer,
+    format_money,
+    STYLE,
+    COLOR,
+)
 
 import numpy as np
 
@@ -120,7 +124,7 @@ def add_footer(page: Page, footer_text: str):
     """Places a centered footer at the bottom of the page."""
     ps = page.get_page_info().get_size()
     rect = Rectangle(Decimal(0), Decimal(0), Decimal(ps[0]), Decimal(60))
-    footer = Paragraph(footer_text, font_size=Decimal(8), font=FONT, horizontal_alignment=Alignment.CENTERED)
+    footer = Paragraph(footer_text, font_size=Decimal(8), font=STYLE.primary_font, horizontal_alignment=Alignment.CENTERED)
     footer.layout(page, rect)
 
 
@@ -246,7 +250,7 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
     for heading in headings:
         p = Paragraph(heading,
                       font_color=COLOR['white'],
-                      font=FONT_BOLD,
+                      font=STYLE.title_font,
                       horizontal_alignment=Alignment.LEFT)
         table.add(TableCell(p, background_color=COLOR['dark_blue']))
 
@@ -262,7 +266,7 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
         table.add(TableCell(
             Paragraph(
                 item.description,
-                font=FONT,
+                font=STYLE.primary_font,
                 horizontal_alignment=Alignment.LEFT,
             ),
             background_color=c),
@@ -270,7 +274,7 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
         table.add(TableCell(
             Paragraph(
                 str(item.quantity),
-                font=FONT,
+                font=STYLE.primary_font,
                 horizontal_alignment=Alignment.LEFT,
             ),
             background_color=c),
@@ -278,7 +282,7 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
         table.add(TableCell(
             Paragraph(
                 format_money(item.price_per_unit),
-                font=FONT,
+                font=STYLE.primary_font,
                 horizontal_alignment=Alignment.LEFT,
             ),
             background_color=c),
@@ -286,7 +290,7 @@ def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
         table.add(TableCell(
             Paragraph(
                 format_money(item.price()),
-                font=FONT,
+                font=STYLE.primary_font,
                 horizontal_alignment=Alignment.LEFT,
             ),
             background_color=c),

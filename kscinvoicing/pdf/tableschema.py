@@ -4,7 +4,7 @@ from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWid
 from borb.pdf.canvas.layout.text.paragraph import Paragraph
 from borb.pdf.canvas.layout.table.table import TableCell
 
-from kscinvoicing.pdf.utils import FONT, FONT_BOLD
+from kscinvoicing.pdf.utils import STYLE
 
 import numpy as np
 
@@ -48,6 +48,10 @@ class TableSchema:
 
     def populate_table(self, table):
 
+        def clean_text(val):
+            """Helper function to clean text. To avoid error related to uncommon whitespace for given font."""
+            return val.replace('\u202F', ' ')
+
         ignore_cells = []
         for i, row in enumerate(self.tabledata):
             for j, val in enumerate(row):
@@ -55,8 +59,10 @@ class TableSchema:
                 if (i, j) in ignore_cells:
                     continue
 
-                font = FONT_BOLD if (i, j) in self.bold_cells else FONT
-                text = Paragraph(val, font=font)
+                font = STYLE.title_font if (i, j) in self.bold_cells else STYLE.primary_font
+
+                text = Paragraph(clean_text(val), font=font)
+                print(f"Text: {type(val)}, {val}")
 
                 if (i, j) in self.double_cells:
                     table.add(TableCell(text, col_span=2))

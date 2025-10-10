@@ -1,8 +1,10 @@
 
 # for french currency
 import locale
+from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
+import json
 
 from borb.pdf.canvas.color.color import RGBColor
 from borb.pdf.canvas.font.simple_font.true_type_font import TrueTypeFont
@@ -22,17 +24,6 @@ COLOR = {
     'dark_blue': RGBColor(Decimal(0.14), Decimal(0.25), Decimal(0.445)),
 }
 
-# TODO need to make this accessible from within the library... for other users.
-FONTBOOK = {
-    "sf-compact-rounded": "/System/Library/Fonts/SFCompactRounded.ttf",
-    "din-alternate-bold": "/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf",
-    "arial-rounded-bold": "/System/Library/Fonts/Supplemental/Arial Rounded Bold.ttf",
-    "veranda": "/System/Library/Fonts/Supplemental/Verdana.ttf",
-    "trebuchet-ms": "/System/Library/Fonts/Supplemental/Trebuchet MS.ttf",
-    "courrier": "/System/Library/Fonts/Supplemental/Courier New.ttf",
-}
-
-
 def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
     """Formats Decimal type for printing on invoice."""
     fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
@@ -40,16 +31,30 @@ def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
     return output
 
 
-def get_font(font='veranda'):
-    font_path = Path(FONTBOOK[font])
-    font: Font = TrueTypeFont.true_type_font_from_file(font_path)
+@dataclass
+class StyleConfig:
+    cfg: dict
+    primary_font: Font = field(init=False)
+    title_font: Font = field(init=False)
 
-    return font
+    @staticmethod
+    def load_font(font_path: str) -> Font:
+        return TrueTypeFont.true_type_font_from_file(Path(font_path))
+
+    def __post_init__(self):
+        self.primary_font = self.load_font(self.cfg['primary_font'])
+        self.title_font = self.load_font(self.cfg['title_font'])
 
 
-FONT = get_font('sf-compact-rounded')
-FONT_BOLD = get_font('din-alternate-bold')
+def load_style_config() -> StyleConfig:
+    """Load style configuration from json file."""
+    style_path = "./invoice_config/style.json"
+    with open(style_path, "r") as file:
+        style_cfg = json.load(file)
+    style = StyleConfig(style_cfg)
+    return style
 
+STYLE = load_style_config()
 
 class VerticalSpacer(FixedColumnWidthTable):
     """Helper class to add vertical space of precise size to document."""

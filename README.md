@@ -17,6 +17,12 @@ python generate_invoice_from_json.py invoice_config_file.json
 
 ```
 
+### Fonts
+Fonts can be customised in the config file by supplying the path to a .ttf file. 
+If no font is supplied, the default font will be used which is packaged with this repository.
+The fonts used here were obtained from [Google Fonts](https://fonts.google.com/?preview.layout=grid&lang=en_Latn).
+
+
 ## TODO
 - [ ] Add GUI
 
