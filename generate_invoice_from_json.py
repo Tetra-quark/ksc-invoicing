@@ -23,13 +23,28 @@ def invoice_data_from_json(path: str) -> dict:
 def generate_invoice_name(invoice_id: str, recipient_name: str, date: datetime):
     return f"Invoice_{invoice_id}_{recipient_name.replace(' ', '-')}_{date.strftime('%Y-%m-%d')}"
 
+
+def preview_file(draftpath: Path):
+    system = platform.system()
+    if system == "Windows":
+        subprocess.run(['start', draftpath], shell=True, check=True)
+    elif system == "Darwin":  # macOS
+        subprocess.run(['open', draftpath], check=True)
+    elif system == "Linux":
+        subprocess.run(['xdg-open', draftpath], check=True)
+    else:
+        print(f"Preview unavailable for OS: {system}. Please open the file manually: {draftpath}")
+
+
 def main():
 
     parser = argparse.ArgumentParser(description="Generate invoice from json file.")
     parser.add_argument("filepath", type=str, help="path to json file")
+    parser.add_argument("--no-preview", action='store_false', help="open generated draft invoice in default pdf viewer")
     args = parser.parse_args()
 
     data = invoice_data_from_json(args.filepath)
+    show_preview = args.no_preview
 
     invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
 
@@ -75,33 +90,35 @@ def main():
 
     invoice_name = generate_invoice_name(logger.invoice_number, recipient.name, invoice.date)
 
-    # Save draft and open pdf with Preview
-    draftpath = invoices_path / f'DRAFT_{invoice_name}.pdf'
-    builder.save_document(draftpath, pdf_invoice)
+    if show_preview:
 
-    system = platform.system()
-    if system == "Windows":
-        subprocess.run(['start', draftpath], shell=True, check=True)
-    elif system == "Darwin":  # macOS
-        subprocess.run(['open', draftpath], check=True)
-    elif system == "Linux":
-        subprocess.run(['xdg-open', draftpath], check=True)
+        # Save draft and open pdf with Preview
+        draftpath = invoices_path / f'DRAFT_{invoice_name}.pdf'
+        builder.save_document(draftpath, pdf_invoice)
+
+        preview_file(draftpath)
+
+        response = input("Do you want to save this draft as an official invoice? (type 'y' to save)\n")
+        if response == "y":
+            savepath = invoices_path / f"{invoice_name}.pdf"
+            draftpath.rename(savepath)
+            print(f"Draft saved to : '{savepath}'")
+            logger.log_invoice(date=invoice.date,
+                               sender=sender.name,
+                               recipient=recipient.name,
+                               total=str(invoice.total))
+        else:
+            draftpath.unlink()
+            print("Draft deleted.")
+
     else:
-        print(f"Preview unavailable for OS: {system}. Please open the file manually: {draftpath}")
-
-    response = input("Do you want to save this draft as an offcial invoice? (type 'yes' to save)\n")
-    if response == "yes":
-        # Save draft as official invoice
         savepath = invoices_path / f"{invoice_name}.pdf"
-        draftpath.rename(savepath)
-        print(f"Draft saved to : '{savepath}'")
+        builder.save_document(savepath, pdf_invoice)
         logger.log_invoice(date=invoice.date,
                            sender=sender.name,
                            recipient=recipient.name,
                            total=str(invoice.total))
-    else:
-        draftpath.unlink()
-        print("Draft deleted.")
+
 
 
 if __name__ == '__main__':
