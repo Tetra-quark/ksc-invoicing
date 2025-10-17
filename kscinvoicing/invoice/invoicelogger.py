@@ -52,6 +52,3 @@ class InvoiceLogger:
 
         print("Logfile written to json")
 
-    @staticmethod
-    def generate_invoice_name(invoice_id: str, recipient_name: str, date: datetime):
-        return f"Invoice_{invoice_id}_{recipient_name.replace(' ', '-')}_{date.strftime('%Y-%m-%d')}"

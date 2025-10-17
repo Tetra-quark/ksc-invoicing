@@ -20,6 +20,8 @@ def invoice_data_from_json(path: str) -> dict:
         data = json.load(file)
         return data
 
+def generate_invoice_name(invoice_id: str, recipient_name: str, date: datetime):
+    return f"Invoice_{invoice_id}_{recipient_name.replace(' ', '-')}_{date.strftime('%Y-%m-%d')}"
 
 def main():
 
@@ -71,7 +73,7 @@ def main():
                                         footer_text=data['footer_text'],
                                         )
 
-    invoice_name = logger.generate_invoice_name(logger.invoice_number, recipient.name, invoice.date)
+    invoice_name = generate_invoice_name(logger.invoice_number, recipient.name, invoice.date)
 
     # Save draft and open pdf with Preview
     draftpath = invoices_path / f'DRAFT_{invoice_name}.pdf'
