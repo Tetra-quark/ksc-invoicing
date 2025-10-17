@@ -48,10 +48,6 @@ class TableSchema:
 
     def populate_table(self, table):
 
-        def clean_text(val):
-            """Helper function to clean text. To avoid error related to uncommon whitespace for given font."""
-            return val.replace('\u202F', ' ')
-
         ignore_cells = []
         for i, row in enumerate(self.tabledata):
             for j, val in enumerate(row):
@@ -60,7 +56,7 @@ class TableSchema:
                     continue
 
                 font = STYLE.title_font if (i, j) in self.bold_cells else STYLE.primary_font
-                text = Paragraph(clean_text(val), font=font)
+                text = Paragraph(val, font=font)
 
                 if (i, j) in self.double_cells:
                     table.add(TableCell(text, col_span=2))

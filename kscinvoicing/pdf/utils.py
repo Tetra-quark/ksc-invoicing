@@ -24,10 +24,16 @@ COLOR = {
     'dark_blue': RGBColor(Decimal(0.14), Decimal(0.25), Decimal(0.445)),
 }
 
+
+def clean_text(val):
+    """Helper function to clean text. To avoid error related to uncommon whitespace for Roboto font."""
+    return val.replace('\u202F', ' ')
+
+
 def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
     """Formats Decimal type for printing on invoice."""
     fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
-    output = symbol + " " + fmtd_amount
+    output = symbol + " " + clean_text(fmtd_amount)
     return output
 
 
