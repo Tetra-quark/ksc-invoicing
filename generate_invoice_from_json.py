@@ -25,6 +25,9 @@ def generate_invoice_name(invoice_id: str, recipient_name: str, date: datetime):
 
 
 def preview_file(draftpath: Path):
+    """
+    Open the generated draft invoice in the default PDF viewer based on the OS.
+    """
     system = platform.system()
     if system == "Windows":
         subprocess.run(['start', draftpath], shell=True, check=True)
