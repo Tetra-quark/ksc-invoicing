@@ -4,7 +4,7 @@ from typing import Optional
 from kscinvoicing.info.address import Address
 
 
-# client can be a company or an individual but min requirements are: name, adress, email
+# client can be a company or an individual, but min requirements are: name, address, email
 @dataclass
 class ContactInfo:
     name: str
