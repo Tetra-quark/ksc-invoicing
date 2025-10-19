@@ -166,7 +166,9 @@ def build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) ->
 
     def contactinfo_to_list(contact: ContactInfo) -> list:
         """Put contact info object into a list to be inserted into invoice table."""
-        details = [contact.name, contact.address.line1, contact.address.line2]
+        details = [contact.name,
+                   *contact.address.address_lines(),
+                   ]
         if contact.phone is not None:
             details.append(contact.phone)
         if contact.email is not None:

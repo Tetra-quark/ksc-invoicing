@@ -9,24 +9,24 @@ class Address:
     postcode: str
     city: str
     country: str
+    building: str | None = None
+
+    @property
+    def full_address(self) -> str:
+        full_address = f"{self.number} {self.street}\n{self.postcode} {self.city}, {self.country}"
+        if self.building:
+            full_address = f"{self.building}\n{full_address}"
+        return full_address
 
     def __str__(self) -> str:
-        return f"{self.number} {self.street}\n{self.postcode} {self.city}, {self.country}"
+        return self.full_address
 
     def address_lines(self) -> list:
         """Depends on the str method."""
         return str(self).split('\n')
 
-    @property
-    def line1(self):
-        return self.address_lines()[0]
 
-    @property
-    def line2(self):
-        return self.address_lines()[1]
-
-
-# Generally its a good idea to seperate class use from class creation using factories
+# Generally it's a good idea to separate class use from class creation using factories
 class AddressFactory:
 
     @staticmethod
