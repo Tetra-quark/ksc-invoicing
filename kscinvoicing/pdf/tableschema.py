@@ -1,8 +1,11 @@
 from decimal import Decimal
 from dataclasses import dataclass, field
-from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWidthTable
-from borb.pdf.canvas.layout.text.paragraph import Paragraph
-from borb.pdf.canvas.layout.table.table import TableCell
+
+from borb.pdf import (
+    FixedColumnWidthTable,
+    Paragraph,
+    TableCell,
+)
 
 from kscinvoicing.pdf.utils import STYLE
 
@@ -59,7 +62,7 @@ class TableSchema:
                 text = Paragraph(val, font=font)
 
                 if (i, j) in self.double_cells:
-                    table.add(TableCell(text, col_span=2))
+                    table.add(TableCell(text, column_span=2))
                     ignore_cells.append((i, j+1))
                 else:
                     table.add(text)

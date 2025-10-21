@@ -6,11 +6,12 @@ from decimal import Decimal
 from pathlib import Path
 import json
 
-from borb.pdf.canvas.color.color import RGBColor
-from borb.pdf.canvas.font.simple_font.true_type_font import TrueTypeFont
-from borb.pdf.canvas.font.font import Font
-from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWidthTable
-from borb.pdf.canvas.layout.text.paragraph import Paragraph
+from borb.pdf import (
+    RGBColor,
+    TrueTypeFont,
+    FixedColumnWidthTable,
+    Paragraph,
+)
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
 locale._override_localeconv['n_sign_posn'] = 1
@@ -40,11 +41,11 @@ def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
 @dataclass
 class StyleConfig:
     cfg: dict
-    primary_font: Font = field(init=False)
-    title_font: Font = field(init=False)
+    primary_font: TrueTypeFont = field(init=False)
+    title_font: TrueTypeFont = field(init=False)
 
     @staticmethod
-    def load_font(font_path: str) -> Font:
+    def load_font(font_path: str) -> TrueTypeFont:
         return TrueTypeFont.true_type_font_from_file(Path(font_path))
 
     def __post_init__(self):
