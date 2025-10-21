@@ -1,6 +1,4 @@
-
-# for french currency
-import locale
+import locale # for french currency
 from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path

@@ -1,3 +1,9 @@
+from pathlib import Path
+from datetime import datetime
+from typing import Optional
+from decimal import Decimal
+
+import numpy as np
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf import (
     Paragraph,
@@ -11,11 +17,6 @@ from borb.pdf import (
     Document,
 )
 
-from pathlib import Path
-from datetime import datetime
-from typing import Optional
-from decimal import Decimal
-
 from kscinvoicing.info.contactinfo import ContactInfo
 from kscinvoicing.invoice import LineItem, Invoice
 from kscinvoicing.pdf.tableschema import TableSchema
@@ -25,8 +26,6 @@ from kscinvoicing.pdf.utils import (
     STYLE,
     COLOR,
 )
-
-import numpy as np
 
 
 class InvoiceBuilder:

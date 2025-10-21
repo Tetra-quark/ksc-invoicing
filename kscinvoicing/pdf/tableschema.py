@@ -1,6 +1,7 @@
 from decimal import Decimal
 from dataclasses import dataclass, field
 
+import numpy as np
 from borb.pdf import (
     FixedColumnWidthTable,
     Paragraph,
@@ -8,8 +9,6 @@ from borb.pdf import (
 )
 
 from kscinvoicing.pdf.utils import STYLE
-
-import numpy as np
 
 
 @dataclass
