@@ -1,13 +1,15 @@
-from borb.pdf.document.document import Document
-from borb.pdf.page.page import Page
-from borb.pdf.canvas.layout.text.paragraph import Paragraph
-from borb.pdf.canvas.layout.image.image import Image
-from borb.pdf.canvas.layout.layout_element import Alignment
-from borb.pdf.canvas.layout.table.fixed_column_width_table import FixedColumnWidthTable
-from borb.pdf.canvas.layout.table.table import TableCell
-from borb.pdf.canvas.layout.page_layout.multi_column_layout import SingleColumnLayout
 from borb.pdf.canvas.geometry.rectangle import Rectangle
-from borb.pdf.pdf import PDF
+from borb.pdf import (
+    Paragraph,
+    Image,
+    Alignment,
+    FixedColumnWidthTable,
+    TableCell,
+    Page,
+    SingleColumnLayout,
+    PDF,
+    Document,
+)
 
 from pathlib import Path
 from datetime import datetime
@@ -93,7 +95,7 @@ class InvoiceBuilder:
         # Create document & add page
         pdf = Document()
         page = Page()
-        pdf.append_page(page)
+        pdf.add_page(page)
 
         # layout
         layout = SingleColumnLayout(page)
@@ -125,7 +127,7 @@ def add_footer(page: Page, footer_text: str):
     ps = page.get_page_info().get_size()
     rect = Rectangle(Decimal(0), Decimal(0), Decimal(ps[0]), Decimal(60))
     footer = Paragraph(footer_text, font_size=Decimal(8), font=STYLE.primary_font, horizontal_alignment=Alignment.CENTERED)
-    footer.layout(page, rect)
+    footer.paint(page, rect)
 
 
 def build_invoice_info_schema(company_name: str, siren_number: str, invoice_number: str, bill_date: datetime,
