@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Optional
 from decimal import Decimal
 
-import numpy as np
 from borb.pdf.canvas.geometry.rectangle import Rectangle
 from borb.pdf import (
     Paragraph,
@@ -145,8 +144,6 @@ def build_invoice_info_schema(company_name: str, siren_number: str, invoice_numb
                  ["SIREN ", siren_number, "Date", bill_date.strftime('%d/%m/%Y')],
                  [" ", " ", due_date_label, due_date_value]]
 
-    tabledata = np.array(tabledata)
-
     column_width_ratios = [Decimal(1), Decimal(5), Decimal(2), Decimal(2)]
 
     # specify cells to embolden
@@ -180,7 +177,7 @@ def build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) ->
     recipient_details = contactinfo_to_list(recipient)
 
     table_shape = (6, 3)  # (rows, columns)
-    tabledata = np.full(shape=table_shape, fill_value=" ", dtype="<U50")
+    tabledata = [[""] * table_shape[1] for _ in range(table_shape[0])]
 
     tabledata[0][0] = "Facturé par"
     tabledata[0][-1] = "Facturé à"
@@ -229,7 +226,6 @@ def build_totals_schema(subtotal: Decimal,
             fmt_tax = format_money(tax)
             tabledata.append(row_helper("TVA", fmt_tax))
 
-    # grand total
     fmt_total = format_money(total)
     tabledata.append(row_helper("Total", fmt_total))
 

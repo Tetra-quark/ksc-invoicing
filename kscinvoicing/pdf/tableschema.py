@@ -1,7 +1,6 @@
 from decimal import Decimal
 from dataclasses import dataclass, field
 
-import numpy as np
 from borb.pdf import (
     FixedColumnWidthTable,
     Paragraph,
@@ -15,7 +14,7 @@ from kscinvoicing.pdf.utils import STYLE
 class TableSchema:
     """Class to build borb table for invoice."""
 
-    tabledata: np.ndarray # TODO this should be a list of lists, not a numpy array (I probably did this for the calculations on amounts)
+    tabledata: list[list]
     column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
     bold_cells: list[tuple[int, int]]
     double_cells: list[tuple[int, int]] = field(default_factory=lambda: [])  # merges righthand cell with specified cell
