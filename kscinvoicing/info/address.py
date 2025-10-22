@@ -24,20 +24,3 @@ class Address:
     def address_lines(self) -> list:
         """Depends on the str method."""
         return str(self).split('\n')
-
-
-# Generally it's a good idea to separate class use from class creation using factories
-class AddressFactory:
-
-    @staticmethod
-    def create_address_from_str(address: str) -> Address:
-
-        # use python's named groups regex extension
-        pattern = r'(?P<number>\d+)\s(?P<street>[\w\s]+);\s' \
-                  r'(?P<postcode>\d+[\w]+)\s(?P<city>[\w\s-]+),\s(?P<country>[\w\s-]+)'
-
-        res = re.search(pattern, address)
-        parsed_address_data = res.groupdict()
-
-        # unpack kwargs
-        return Address(**parsed_address_data)
