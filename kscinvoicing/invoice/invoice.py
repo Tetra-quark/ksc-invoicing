@@ -3,6 +3,9 @@ from datetime import datetime
 from typing import Optional
 from decimal import Decimal
 
+from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.invoice.invoicelogger import InvoiceLogger
+
 
 @dataclass
 class LineItem:

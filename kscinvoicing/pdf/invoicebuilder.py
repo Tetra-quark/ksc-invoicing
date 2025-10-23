@@ -18,7 +18,7 @@ from borb.pdf import (
 from PIL import Image as PILImage
 
 from kscinvoicing.info.contactinfo import ContactInfo
-from kscinvoicing.invoice import LineItem, Invoice
+from kscinvoicing.invoice.invoice import LineItem, Invoice
 from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import (
     VerticalSpacer,

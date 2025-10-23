@@ -9,8 +9,7 @@ import json
 from decimal import Decimal
 import argparse
 
-from kscinvoicing.info.address import Address
-from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.info import Address, ContactInfo
 from kscinvoicing.invoice import LineItem, Invoice, InvoiceLogger
 from kscinvoicing.pdf.invoicebuilder import save_document, build_invoice
 
