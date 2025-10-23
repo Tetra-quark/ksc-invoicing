@@ -20,9 +20,6 @@ def invoice_data_from_json(path: str) -> dict:
         data = json.load(file)
         return data
 
-def generate_invoice_name(invoice_id: str, recipient_name: str, date: datetime):
-    return f"Invoice_{invoice_id}_{recipient_name.replace(' ', '-')}_{date.strftime('%Y-%m-%d')}"
-
 
 def preview_file(draftpath: Path):
     """

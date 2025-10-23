@@ -25,6 +25,9 @@ class Invoice:
     date: datetime = datetime.now()
     due_date: Optional[datetime] = None
 
+    def generate_invoice_name(self, recipient_name: str):
+        return f"Invoice_{self.invoice_number}_{recipient_name.replace(' ', '-')}_{self.date.strftime('%Y-%m-%d')}"
+
     @property
     def subtotal(self) -> Decimal:
         return sum([item.price() for item in self.items])
