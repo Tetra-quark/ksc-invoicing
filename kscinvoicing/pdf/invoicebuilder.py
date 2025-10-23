@@ -35,8 +35,6 @@ def get_image_dimensions(path) -> tuple[int, int]:
 
 def build_invoice(siren_number: str,
                   company_name: str,
-                  sender: ContactInfo,
-                  recipient: ContactInfo,
                   invoice: Invoice,
                   logopath: str,
                   logo_width: int = 200,
@@ -52,7 +50,7 @@ def build_invoice(siren_number: str,
     logo_height = logo_width * h // w
     logo = Image(Path(logopath), width=Decimal(logo_width), height=Decimal(logo_height))
 
-    contact_details_schema = _build_contact_details_schema(sender, recipient)
+    contact_details_schema = _build_contact_details_schema(invoice.sender, invoice.recipient)
     contact_details_table = contact_details_schema.build_table()
 
     invoice_information_schema = _build_invoice_info_schema(company_name=company_name,
