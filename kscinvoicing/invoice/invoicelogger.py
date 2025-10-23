@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from pathlib import Path
 from datetime import datetime
 import json
 
@@ -6,15 +7,21 @@ import json
 @dataclass
 class InvoiceLogger:
 
-    log_path: str
+    log_path: Path
     _invoice_number: str = field(init=False, repr=True)
+
+    def _get_previous_invoice_number(self) -> int:
+        """Gets the largest invoice number in the log file."""
+        with open(self.log_path, 'r') as log:
+            d = json.load(log)
+            prev_num = max([int(key) for key in d.keys()])
+            return prev_num
 
     def __post_init__(self):
         try:
-            with open(self.log_path, 'r') as log:
-                d = json.load(log)
-                prev_no = max([int(key) for key in d.keys()])
-                self.invoice_number = f"{prev_no + 1:04}"
+            # get previous invoice number and increment by 1
+            prev_num = self._get_previous_invoice_number()
+            self.invoice_number = f"{prev_num + 1:04}"
         except FileNotFoundError:
             print(f"WARNING: {self.log_path} was not found. If you proceed to save the invoice draft it will be "
                   f"created.")
