@@ -106,28 +106,21 @@ def main():
 
     if show_preview:
 
-        # Save draft and open pdf with Preview
-        draftpath = invoices_path / f'DRAFT_{invoice_name}.pdf'
-        builder.save_document(draftpath, pdf_invoice)
-
-        preview_file(draftpath)
+        preview_file(save_path)
 
         response = input("Do you want to save this draft as an official invoice? (type 'y' to save)\n")
         if response == "y":
-            savepath = invoices_path / f"{invoice_name}.pdf"
-            draftpath.rename(savepath)
-            print(f"Draft saved to : '{savepath}'")
+            print(f"Invoice saved to : '{save_path}'")
             logger.log_invoice(date=invoice.date,
                                sender=sender.name,
                                recipient=recipient.name,
                                total=str(invoice.total))
         else:
-            draftpath.unlink()
+            save_path.unlink()
             print("Draft deleted.")
 
     else:
-        savepath = invoices_path / f"{invoice_name}.pdf"
-        builder.save_document(savepath, pdf_invoice)
+        print(f"Invoice saved to : '{save_path}'")
         logger.log_invoice(date=invoice.date,
                            sender=sender.name,
                            recipient=recipient.name,
