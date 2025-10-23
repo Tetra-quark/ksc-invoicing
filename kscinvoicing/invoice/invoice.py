@@ -14,19 +14,43 @@ class LineItem:
         return self.quantity * self.price_per_unit
 
 
-@dataclass
 class Invoice:
-    """Class containing invoice information"""
-    items: list[LineItem]
-    discount: Decimal = field(init=False, repr=False, default=Decimal("0"))
-    tax: Decimal = field(init=False, repr=False, default=Decimal("0"))
+    """Class representing a complete invoice."""
 
-    invoice_number: str
-    date: datetime = datetime.now()
-    due_date: Optional[datetime] = None
+    def __init__(self,
+                 sender: ContactInfo,
+                 recipient: ContactInfo,
+                 items: list[LineItem],
+                 logger: InvoiceLogger,
+                 date: datetime = datetime.now(),
+                 due_date: datetime = None,
+                 ):
+        self.sender = sender
+        self.recipient = recipient
+        self.items = items
 
-    def generate_invoice_name(self, recipient_name: str):
-        return f"Invoice_{self.invoice_number}_{recipient_name.replace(' ', '-')}_{self.date.strftime('%Y-%m-%d')}"
+        self.logger = logger
+
+        self.date = date
+        self.due_date = due_date
+        self.invoice_number = logger.invoice_number
+
+        # TODO implement tax and discount properly
+        self.discount = Decimal("0")
+        self.tax = Decimal("0")
+
+    def log_invoice(self):
+        print(f"Invoice saved to : '{save_path}'")
+        self.logger.log_invoice(
+            date=self.date,
+            sender=self.sender.name,
+            recipient=self.recipient.name,
+            total=str(self.total),
+        )
+
+
+    def get_invoice_name(self):
+        return f"Invoice_{self.invoice_number}_{self.recipient.name.replace(' ', '-')}_{self.date.strftime('%Y-%m-%d')}"
 
     @property
     def subtotal(self) -> Decimal:
