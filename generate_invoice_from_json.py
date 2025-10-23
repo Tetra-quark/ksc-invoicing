@@ -63,6 +63,44 @@ def extract_lineitems_from_json(data: dict) -> list[LineItem]:
     return items
 
 
+def generate_invoice(data: dict, show_preview: bool = True):
+
+    invoices_path = Path(data['save_location'])
+
+    invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
+
+    # create invoice
+    invoice = Invoice(
+        sender=extract_sender_from_json(data),
+        recipient=extract_recipient_from_json(data),
+        items=extract_lineitems_from_json(data),
+        date=invoice_date,
+        logger=InvoiceLogger(invoices_path / "log.json"),
+    )
+
+    pdf_invoice = build_invoice(
+        siren_number=data['sender']['siren'],
+        company_name=data['sender']['company'],
+        invoice=invoice,
+        logopath=data['logo_path'],
+        footer_text=data['footer_text'],
+    )
+
+    save_path = invoices_path / f"{invoice.get_invoice_name()}.pdf"
+    save_document(save_path, pdf_invoice)
+
+    if show_preview:
+        preview_file(save_path)
+        response = input("Do you want to save this draft as an official invoice? (type 'y' to save)\n")
+        if response == "y":
+            invoice.log_invoice()
+        else:
+            save_path.unlink()
+            print("Draft deleted.")
+    else:
+        invoice.log_invoice()
+
+
 def main():
 
     parser = argparse.ArgumentParser(description="Generate invoice from json file.")
@@ -73,58 +111,7 @@ def main():
     show_preview = args.no_preview
     data = invoice_data_from_json(args.filepath)
 
-
-    invoices_path = Path(data['save_location'])
-    logger = InvoiceLogger(invoices_path / "log.json")
-
-    invoice_date = datetime.strptime(data['invoice_date'], '%Y-%m-%d')
-    sender = extract_sender_from_json(data)
-    recipient = extract_recipient_from_json(data)
-    items = extract_lineitems_from_json(data)
-
-    # create invoice
-    invoice = Invoice(items=items,
-                      date=invoice_date,
-                      invoice_number=logger.invoice_number)
-
-
-    pdf_invoice = build_invoice(
-        siren_number=data['sender']['siren'],
-        company_name=data['sender']['company'],
-        sender=sender,
-        recipient=recipient,
-        invoice=invoice,
-        logopath=data['logo_path'],
-        footer_text=data['footer_text'],
-    )
-
-    invoice_name = invoice.generate_invoice_name(recipient.name)
-
-    save_path = invoices_path / f"{invoice_name}.pdf"
-    save_document(save_path, pdf_invoice)
-
-    if show_preview:
-
-        preview_file(save_path)
-
-        response = input("Do you want to save this draft as an official invoice? (type 'y' to save)\n")
-        if response == "y":
-            print(f"Invoice saved to : '{save_path}'")
-            logger.log_invoice(date=invoice.date,
-                               sender=sender.name,
-                               recipient=recipient.name,
-                               total=str(invoice.total))
-        else:
-            save_path.unlink()
-            print("Draft deleted.")
-
-    else:
-        print(f"Invoice saved to : '{save_path}'")
-        logger.log_invoice(date=invoice.date,
-                           sender=sender.name,
-                           recipient=recipient.name,
-                           total=str(invoice.total))
-
+    generate_invoice(data, show_preview)
 
 
 if __name__ == '__main__':
