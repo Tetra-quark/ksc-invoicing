@@ -15,6 +15,7 @@ from borb.pdf import (
     PDF,
     Document,
 )
+from PIL import Image as PILImage
 
 from kscinvoicing.info.contactinfo import ContactInfo
 from kscinvoicing.invoice import LineItem, Invoice
@@ -27,100 +28,94 @@ from kscinvoicing.pdf.utils import (
 )
 
 
-class InvoiceBuilder:
-
-    def build_invoice(self,
-                      siren_number: str,
-                      company_name: str,
-                      sender: ContactInfo,
-                      recipient: ContactInfo,
-                      invoice: Invoice,
-                      logopath: str,
-                      logo_width: int = 200,
-                      footer_text: str = None) -> Document:
-        """Main method to build invoice."""
-
-        # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
-        #  Do have a master method that gets called once in main script or do I build the object method by method
-        #  in the main script?
-        #  What are the pros/cons of doing one over the other?
-
-        def get_image_dimensions(path) -> tuple[int, int]:
-            from PIL import Image as PILImage
-            logo_pil = PILImage.open(path)
-            return logo_pil.size
-
-        w, h = get_image_dimensions(logopath)
-        logo_height = logo_width * h // w
-
-        logo = Image(Path(logopath), width=Decimal(logo_width), height=Decimal(logo_height))
-
-        contact_details_schema = build_contact_details_schema(sender, recipient)
-        contact_details_table = contact_details_schema.build_table()
-
-        invoice_information_schema = build_invoice_info_schema(company_name=company_name,
-                                                               siren_number=siren_number,
-                                                               invoice_number=invoice.invoice_number,
-                                                               bill_date=invoice.date,
-                                                               due_date=invoice.due_date)
-        invoice_information_table = invoice_information_schema.build_table()
-
-        itemised_table = build_itemised_table(invoice.items)
-
-        totals_schema = build_totals_schema(subtotal=invoice.subtotal,
-                                            total=invoice.total,
-                                            discount=invoice.discount,
-                                            tax=invoice.tax)
-        totals_table = totals_schema.build_table()
-
-        pdf = self.build_invoice_document(logo=logo,
-                                          contact_details_table=contact_details_table,
-                                          invoice_information_table=invoice_information_table,
-                                          itemised_table=itemised_table,
-                                          totals_table=totals_table,
-                                          footer_text=footer_text)
-
-        return pdf
-
-    @staticmethod
-    def build_invoice_document(logo: Image,
-                               contact_details_table: FixedColumnWidthTable,
-                               invoice_information_table: FixedColumnWidthTable,
-                               itemised_table: FixedColumnWidthTable,
-                               totals_table: FixedColumnWidthTable,
-                               footer_text: str) -> Document:
-        """Creates a pdf object for invoice using borb tables."""
-        # Create document & add page
-        pdf = Document()
-        page = Page()
-        pdf.add_page(page)
-
-        # layout
-        layout = SingleColumnLayout(page)
-        layout.vertical_margin = page.get_page_info().get_height() * Decimal(0.02)
-
-        layout.add(logo)
-        layout.add(Paragraph(" "))  # vertical space
-        layout.add(contact_details_table)  # Invoice personal & recipient information
-        layout.add(VerticalSpacer(size=Decimal('15')))
-        layout.add(invoice_information_table)  # Invoice information (date etc, invoice number)
-        layout.add(VerticalSpacer(size=Decimal('5')))
-        layout.add(itemised_table)  # Invoice items
-        layout.add(VerticalSpacer(size=Decimal('10')))
-        layout.add(totals_table)  # Invoice totals summary
-        if footer_text:
-            add_footer(page, footer_text)
-
-        return pdf
-
-    @staticmethod
-    def save_document(savepath: Path, document: Document) -> None:
-        with open(savepath, "wb") as f:
-            # noinspection PyTypeChecker
-            PDF.dumps(f, document)
+def get_image_dimensions(path) -> tuple[int, int]:
+    logo_pil = PILImage.open(path)
+    return logo_pil.size
 
 
-def add_footer(page: Page, footer_text: str):
+def build_invoice(siren_number: str,
+                  company_name: str,
+                  sender: ContactInfo,
+                  recipient: ContactInfo,
+                  invoice: Invoice,
+                  logopath: str,
+                  logo_width: int = 200,
+                  footer_text: str = None) -> Document:
+    """Main method to build invoice."""
+
+    # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
+    #  Do have a master method that gets called once in main script or do I build the object method by method
+    #  in the main script?
+    #  What are the pros/cons of doing one over the other?
+
+    w, h = get_image_dimensions(logopath)
+    logo_height = logo_width * h // w
+    logo = Image(Path(logopath), width=Decimal(logo_width), height=Decimal(logo_height))
+
+    contact_details_schema = _build_contact_details_schema(sender, recipient)
+    contact_details_table = contact_details_schema.build_table()
+
+    invoice_information_schema = _build_invoice_info_schema(company_name=company_name,
+                                                            siren_number=siren_number,
+                                                            invoice_number=invoice.invoice_number,
+                                                            bill_date=invoice.date,
+                                                            due_date=invoice.due_date)
+    invoice_information_table = invoice_information_schema.build_table()
+
+    itemised_table = _build_itemised_table(invoice.items)
+
+    totals_schema = _build_totals_schema(subtotal=invoice.subtotal,
+                                         total=invoice.total,
+                                         discount=invoice.discount,
+                                         tax=invoice.tax)
+    totals_table = totals_schema.build_table()
+
+    pdf = _build_invoice_document(logo=logo,
+                                      contact_details_table=contact_details_table,
+                                      invoice_information_table=invoice_information_table,
+                                      itemised_table=itemised_table,
+                                      totals_table=totals_table,
+                                      footer_text=footer_text)
+
+    return pdf
+
+def _build_invoice_document(logo: Image,
+                           contact_details_table: FixedColumnWidthTable,
+                           invoice_information_table: FixedColumnWidthTable,
+                           itemised_table: FixedColumnWidthTable,
+                           totals_table: FixedColumnWidthTable,
+                           footer_text: str) -> Document:
+    """Creates a pdf object for invoice using borb tables."""
+    # Create document & add page
+    pdf = Document()
+    page = Page()
+    pdf.add_page(page)
+
+    # layout
+    layout = SingleColumnLayout(page)
+    layout.vertical_margin = page.get_page_info().get_height() * Decimal(0.02)
+
+    layout.add(logo)
+    layout.add(Paragraph(" "))  # vertical space
+    layout.add(contact_details_table)  # Invoice personal & recipient information
+    layout.add(VerticalSpacer(size=Decimal('15')))
+    layout.add(invoice_information_table)  # Invoice information (date etc, invoice number)
+    layout.add(VerticalSpacer(size=Decimal('5')))
+    layout.add(itemised_table)  # Invoice items
+    layout.add(VerticalSpacer(size=Decimal('10')))
+    layout.add(totals_table)  # Invoice totals summary
+    if footer_text:
+        _add_footer(page, footer_text)
+
+    return pdf
+
+def save_document(savepath: Path, document: Document) -> None:
+    with open(savepath, "wb") as f:
+        # noinspection PyTypeChecker
+        PDF.dumps(f, document)
+
+
+def _add_footer(page: Page, footer_text: str):
     """Places a centered footer at the bottom of the page."""
     ps = page.get_page_info().get_size()
     rect = Rectangle(Decimal(0), Decimal(0), Decimal(ps[0]), Decimal(60))
@@ -128,8 +123,12 @@ def add_footer(page: Page, footer_text: str):
     footer.paint(page, rect)
 
 
-def build_invoice_info_schema(company_name: str, siren_number: str, invoice_number: str, bill_date: datetime,
-                              due_date: Optional[datetime] = None) -> TableSchema:
+def _build_invoice_info_schema(company_name: str,
+                              siren_number: str,
+                              invoice_number: str,
+                              bill_date: datetime,
+                              due_date: Optional[datetime] = None,
+                              ) -> TableSchema:
     """ Inserts a table with the bill number, todays date and optionally the due date."""
 
     if due_date:
@@ -155,26 +154,24 @@ def build_invoice_info_schema(company_name: str, siren_number: str, invoice_numb
     return tableschema
 
 
-def build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) -> TableSchema:
+def _contactinfo_to_list(contact: ContactInfo) -> list:
+    """Put contact info object into a list to be inserted into invoice table."""
+    details = [
+        contact.name,
+        *contact.address.address_lines(),
+    ]
+    if contact.phone is not None:
+        details.append(contact.phone)
+    if contact.email is not None:
+        details.append(contact.email)
+    return details
+
+
+def _build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) -> TableSchema:
     """ Inserts a table with sender and recipient personal information."""
 
-    # TODO ideally the information necessary should be passed into here and this method should not rely on
-    #  implementation details of the ContactInfo class.. Two options: pass info as arguments, or split method and
-    #  implement some of it in the ContactInfo class? or Invoice class? Inferfaces?
-
-    def contactinfo_to_list(contact: ContactInfo) -> list:
-        """Put contact info object into a list to be inserted into invoice table."""
-        details = [contact.name,
-                   *contact.address.address_lines(),
-                   ]
-        if contact.phone is not None:
-            details.append(contact.phone)
-        if contact.email is not None:
-            details.append(contact.email)
-        return details
-
-    sender_details = contactinfo_to_list(sender)
-    recipient_details = contactinfo_to_list(recipient)
+    sender_details = _contactinfo_to_list(sender)
+    recipient_details = _contactinfo_to_list(recipient)
 
     table_shape = (6, 3)  # (rows, columns)
     tabledata = [[""] * table_shape[1] for _ in range(table_shape[0])]
@@ -202,7 +199,7 @@ def build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) ->
     return tableschema
 
 
-def build_totals_schema(subtotal: Decimal,
+def _build_totals_schema(subtotal: Decimal,
                         total: Decimal,
                         discount: Decimal,
                         tax: Decimal) -> TableSchema:
@@ -237,7 +234,7 @@ def build_totals_schema(subtotal: Decimal,
     return tableschema
 
 
-def build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
+def _build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
     """Builds Borb table containing line items for the invoice."""
 
     headings = ["Description", "Quantité", "Prix Unité", "Total"]
