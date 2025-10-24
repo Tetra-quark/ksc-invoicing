@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 from decimal import Decimal
 
-from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.info.party import CompanySender, IndividualRecipient
 from kscinvoicing.invoice.invoicelogger import InvoiceLogger
 
 
@@ -21,8 +21,8 @@ class Invoice:
     """Class representing a complete invoice."""
 
     def __init__(self,
-                 sender: ContactInfo,
-                 recipient: ContactInfo,
+                 sender: CompanySender,
+                 recipient: IndividualRecipient,
                  items: list[LineItem],
                  logger: InvoiceLogger,
                  date: datetime = datetime.now(),
@@ -43,7 +43,6 @@ class Invoice:
         self.tax = Decimal("0")
 
     def log_invoice(self):
-        print(f"Invoice saved to : '{save_path}'")
         self.logger.log_invoice(
             date=self.date,
             sender=self.sender.name,

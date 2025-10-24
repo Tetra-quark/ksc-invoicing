@@ -17,7 +17,7 @@ from borb.pdf import (
 )
 from PIL import Image as PILImage
 
-from kscinvoicing.info.contactinfo import ContactInfo
+from kscinvoicing.info.party import CompanySender, IndividualRecipient, CompanyRecipient
 from kscinvoicing.invoice.invoice import LineItem, Invoice
 from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import (
@@ -33,12 +33,12 @@ def get_image_dimensions(path) -> tuple[int, int]:
     return logo_pil.size
 
 
-def build_invoice(siren_number: str,
-                  company_name: str,
-                  invoice: Invoice,
-                  logopath: str,
-                  logo_width: int = 200,
-                  footer_text: str = None) -> Document:
+def build_invoice(
+    invoice: Invoice,
+    logopath: str,
+    logo_width: int = 200,
+    footer_text: str = None,
+) -> Document:
     """Main method to build invoice."""
 
     # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
@@ -53,8 +53,8 @@ def build_invoice(siren_number: str,
     contact_details_schema = _build_contact_details_schema(invoice.sender, invoice.recipient)
     contact_details_table = contact_details_schema.build_table()
 
-    invoice_information_schema = _build_invoice_info_schema(company_name=company_name,
-                                                            siren_number=siren_number,
+    invoice_information_schema = _build_invoice_info_schema(company_name=invoice.sender.company_name,
+                                                            siren_number=invoice.sender.siren,
                                                             invoice_number=invoice.invoice_number,
                                                             bill_date=invoice.date,
                                                             due_date=invoice.due_date)
@@ -68,12 +68,14 @@ def build_invoice(siren_number: str,
                                          tax=invoice.tax)
     totals_table = totals_schema.build_table()
 
-    pdf = _build_invoice_document(logo=logo,
-                                      contact_details_table=contact_details_table,
-                                      invoice_information_table=invoice_information_table,
-                                      itemised_table=itemised_table,
-                                      totals_table=totals_table,
-                                      footer_text=footer_text)
+    pdf = _build_invoice_document(
+        logo=logo,
+        contact_details_table=contact_details_table,
+        invoice_information_table=invoice_information_table,
+        itemised_table=itemised_table,
+        totals_table=totals_table,
+        footer_text=footer_text,
+    )
 
     return pdf
 
@@ -152,7 +154,7 @@ def _build_invoice_info_schema(company_name: str,
     return tableschema
 
 
-def _contactinfo_to_list(contact: ContactInfo) -> list:
+def _contact_info_to_list(contact: CompanySender | IndividualRecipient) -> list:
     """Put contact info object into a list to be inserted into invoice table."""
     details = [
         contact.name,
@@ -165,11 +167,11 @@ def _contactinfo_to_list(contact: ContactInfo) -> list:
     return details
 
 
-def _build_contact_details_schema(sender: ContactInfo, recipient: ContactInfo) -> TableSchema:
+def _build_contact_details_schema(sender: CompanySender, recipient: IndividualRecipient) -> TableSchema:
     """ Inserts a table with sender and recipient personal information."""
 
-    sender_details = _contactinfo_to_list(sender)
-    recipient_details = _contactinfo_to_list(recipient)
+    sender_details = _contact_info_to_list(sender)
+    recipient_details = _contact_info_to_list(recipient)
 
     table_shape = (6, 3)  # (rows, columns)
     tabledata = [[""] * table_shape[1] for _ in range(table_shape[0])]
