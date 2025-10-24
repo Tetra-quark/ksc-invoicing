@@ -9,7 +9,7 @@ import json
 from decimal import Decimal
 import argparse
 
-from kscinvoicing.info import Address, ContactInfo
+from kscinvoicing.info import Address, CompanySender, IndividualRecipient, CompanyRecipient
 from kscinvoicing.invoice import LineItem, Invoice, InvoiceLogger
 from kscinvoicing.pdf.invoicebuilder import save_document, build_invoice
 
@@ -35,21 +35,26 @@ def preview_file(draftpath: Path):
         print(f"Preview unavailable for OS: {system}. Please open the file manually: {draftpath}")
 
 
-def extract_sender_from_json(data: dict) -> ContactInfo:
-    sender = ContactInfo(name=data['sender']['name'],
-                         address=Address(**data['sender']['address']),
-                         email=data['sender']['email'],
-                         phone=data['sender']['phone'],
-                         website=data['sender']['website'])
+def extract_sender_from_json(data: dict) -> CompanySender:
+    sender = CompanySender(
+        siren=data['sender']['siren'],
+        company_name=data['sender']['company'],
+        name=data['sender']['name'],
+        address=Address(**data['sender']['address']),
+        email=data['sender']['email'],
+        phone=data['sender']['phone'],
+        website=data['sender']['website'],
+    )
     return sender
 
 
-def extract_recipient_from_json(data: dict) -> ContactInfo:
-    recipient = ContactInfo(name=data['recipient']['name'],
-                            address=Address(**data['recipient']['address']),
-                            email=data['recipient']['email'],
-                            phone=data['recipient']['phone'],
-                            )
+def extract_recipient_from_json(data: dict) -> IndividualRecipient | CompanyRecipient:
+    recipient = IndividualRecipient(
+        name=data['recipient']['name'],
+        address=Address(**data['recipient']['address']),
+        email=data['recipient']['email'],
+        phone=data['recipient']['phone'],
+    )
     return recipient
 
 
@@ -79,8 +84,6 @@ def generate_invoice(data: dict, show_preview: bool = True):
     )
 
     pdf_invoice = build_invoice(
-        siren_number=data['sender']['siren'],
-        company_name=data['sender']['company'],
         invoice=invoice,
         logopath=data['logo_path'],
         footer_text=data['footer_text'],
