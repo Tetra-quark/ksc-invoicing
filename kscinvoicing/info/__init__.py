@@ -1,3 +1,3 @@
 
 from .address import Address
-from .contactinfo import ContactInfo
+from .party import CompanySender, CompanyRecipient, IndividualRecipient
