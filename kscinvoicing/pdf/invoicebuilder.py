@@ -18,7 +18,8 @@ from borb.pdf import (
 from PIL import Image as PILImage
 
 from kscinvoicing.info.party import CompanySender, IndividualRecipient, CompanyRecipient
-from kscinvoicing.invoice.invoice import LineItem, Invoice
+from kscinvoicing.invoice.invoicedata import LineItem, InvoiceData
+from kscinvoicing.pdf.borbinvoice import BorbInvoice
 from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import (
     VerticalSpacer,
@@ -34,11 +35,11 @@ def get_image_dimensions(path) -> tuple[int, int]:
 
 
 def build_invoice(
-    invoice: Invoice,
+    invoice: InvoiceData,
     logopath: str,
     logo_width: int = 200,
     footer_text: str = None,
-) -> Document:
+) -> BorbInvoice:
     """Main method to build invoice."""
 
     # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
@@ -76,8 +77,7 @@ def build_invoice(
         totals_table=totals_table,
         footer_text=footer_text,
     )
-
-    return pdf
+    return BorbInvoice(invoice=invoice, document=pdf)
 
 def _build_invoice_document(logo: Image,
                            contact_details_table: FixedColumnWidthTable,
@@ -109,10 +109,7 @@ def _build_invoice_document(logo: Image,
 
     return pdf
 
-def save_document(savepath: Path, document: Document) -> None:
-    with open(savepath, "wb") as f:
-        # noinspection PyTypeChecker
-        PDF.dumps(f, document)
+
 
 
 def _add_footer(page: Page, footer_text: str):
