@@ -1,3 +1,3 @@
 
-from .invoice import LineItem, Invoice
+from .invoicedata import LineItem, InvoiceData
 from .invoicelogger import InvoiceLogger

@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from decimal import Decimal
 
@@ -17,14 +18,14 @@ class LineItem:
         return self.quantity * self.price_per_unit
 
 
-class Invoice:
-    """Class representing a complete invoice."""
+class InvoiceData:
+    """Class representing a complete invoice data."""
 
     def __init__(self,
                  sender: CompanySender,
                  recipient: IndividualRecipient,
                  items: list[LineItem],
-                 logger: InvoiceLogger,
+                 save_folder: Path,
                  date: datetime = datetime.now(),
                  due_date: datetime = None,
                  ):
@@ -32,11 +33,12 @@ class Invoice:
         self.recipient = recipient
         self.items = items
 
-        self.logger = logger
+        self.save_folder = save_folder
+        self.logger = InvoiceLogger(save_folder / "log.json")
 
         self.date = date
         self.due_date = due_date
-        self.invoice_number = logger.invoice_number
+        self.invoice_number = self.logger.invoice_number
 
         # TODO implement tax and discount properly
         self.discount = Decimal("0")
@@ -49,7 +51,6 @@ class Invoice:
             recipient=self.recipient.name,
             total=str(self.total),
         )
-
 
     def get_invoice_name(self):
         return f"Invoice_{self.invoice_number}_{self.recipient.name.replace(' ', '-')}_{self.date.strftime('%Y-%m-%d')}"
