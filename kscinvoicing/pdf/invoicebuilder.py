@@ -29,8 +29,8 @@ from kscinvoicing.pdf.utils import (
 
 
 def get_image_dimensions(path) -> tuple[int, int]:
-    logo_pil = PILImage.open(path)
-    return logo_pil.size
+    with PILImage.open(path) as logo_pil:
+        return logo_pil.size
 
 
 def build_invoice(
