@@ -5,7 +5,6 @@ from pathlib import Path
 from datetime import datetime
 import json
 from decimal import Decimal
-import argparse
 
 from kscinvoicing.info import Address, CompanySender, IndividualRecipient, CompanyRecipient
 from kscinvoicing.invoice import LineItem, InvoiceData, InvoiceLogger
@@ -76,24 +75,16 @@ def generate_invoice(data: dict) -> BorbInvoice:
 
     return invoice_with_pdf
 
-
-def main():
-
-    parser = argparse.ArgumentParser(description="Generate invoice from json file.")
-    parser.add_argument("filepath", type=str, help="path to json file")
-    parser.add_argument("--no-preview", action='store_false', help="open generated draft invoice in default pdf viewer")
-    args = parser.parse_args()
-
-    data = invoice_data_from_json(args.filepath)
-
+def generate_invoice_and_preview(data: dict) -> None:
+    """
+    Generate and preview invoice pdf from data dictionary - with preview and optional save.
+    """
     invoice_with_pdf = generate_invoice(data)
+    invoice_with_pdf.preview_with_optional_save()
 
-    show_preview = args.no_preview # slightly confusing name
-    if show_preview:
-        invoice_with_pdf.preview_with_optional_save()
-    else:
-        invoice_with_pdf.save()
-
-
-if __name__ == '__main__':
-    main()
+def generate_invoice_and_save(data: dict) -> None:
+    """
+    Generate and save invoice pdf from data dictionary - without preview.
+    """
+    invoice_with_pdf = generate_invoice(data)
+    invoice_with_pdf.save()
