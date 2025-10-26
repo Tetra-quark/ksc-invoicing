@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 from decimal import Decimal
 
 from kscinvoicing.info.party import CompanySender, IndividualRecipient
@@ -19,16 +18,19 @@ class LineItem:
 
 
 class InvoiceData:
-    """Class representing a complete invoice data."""
+    """Class representing all the data for a complete invoice."""
 
-    def __init__(self,
-                 sender: CompanySender,
-                 recipient: IndividualRecipient,
-                 items: list[LineItem],
-                 save_folder: Path,
-                 date: datetime = datetime.now(),
-                 due_date: datetime = None,
-                 ):
+    def __init__(
+        self,
+        sender: CompanySender,
+        recipient: IndividualRecipient,
+        items: list[LineItem],
+        save_folder: Path,
+        date: datetime = datetime.now(),
+        due_date: datetime = None,
+        discount: Decimal = Decimal("0"),
+        tax_rate: Decimal = Decimal("0"),
+    ):
         self.sender = sender
         self.recipient = recipient
         self.items = items
@@ -40,9 +42,8 @@ class InvoiceData:
         self.due_date = due_date
         self.invoice_number = self.logger.invoice_number
 
-        # TODO implement tax and discount properly
-        self.discount = Decimal("0")
-        self.tax = Decimal("0")
+        self.discount = discount
+        self.tax_rate = tax_rate
 
     def log_invoice(self):
         self.logger.log_invoice(
@@ -60,17 +61,15 @@ class InvoiceData:
         return sum([item.price() for item in self.items])
 
     @property
-    def total(self, tax=Decimal('0'), discount=Decimal('0')) -> Decimal:
-        # TODO need do double check how tax and discount interacts.
-        return self.subtotal + tax - discount
+    def tax(self) -> Decimal:
+        return (self.subtotal - self.discount) * self.tax_rate
 
-    @staticmethod
-    def calculate_tax(tax_rate: Decimal, price_excl_tax: Decimal) -> Decimal:
-        return tax_rate * price_excl_tax
+    @property
+    def total(self) -> Decimal:
+        return self.subtotal + self.tax - self.discount
 
     @staticmethod
     def calculate_discount_from_rate(discount_rate: Decimal, price: Decimal):
-        # TODO need to check behaviour interaction with taxation..
         if Decimal("0.00") <= discount_rate <= Decimal('1.00'):
             raise ValueError("Discount rate must be a decimal between 0 and 1.")
         return (1 - discount_rate) * price
