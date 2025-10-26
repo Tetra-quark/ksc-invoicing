@@ -1,5 +1,5 @@
 import unittest
-from generate_invoice_from_json import generate_invoice
+from kscinvoicing.generate_invoice_from_json import generate_invoice
 from kscinvoicing.pdf.borbinvoice import BorbInvoice
 
 class TestGenerateInvoiceFromJson(unittest.TestCase):
