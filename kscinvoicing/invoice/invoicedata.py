@@ -58,8 +58,8 @@ class InvoiceData:
         self.recipient = recipient
         self.items = items
 
-        self.save_folder = save_folder
-        self.logger = InvoiceLogger(save_folder / "log.json")
+        self.save_folder = Path(save_folder)
+        self.logger = InvoiceLogger(self.save_folder / "log.json")
 
         self.date = date
         self.due_date = due_date
