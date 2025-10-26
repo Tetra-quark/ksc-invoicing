@@ -51,6 +51,9 @@ def build_invoice(
     """
     if logo_path is None:
         logo = None
+    elif not Path(logo_path).is_file():
+        print(f"Warning: logo file '{logo_path}' not found.")
+        logo = None
     else:
         w, h = get_image_dimensions(logo_path)
         logo_height = logo_width * h // w
