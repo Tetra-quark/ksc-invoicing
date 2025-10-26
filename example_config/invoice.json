@@ -7,7 +7,7 @@
   "sender": {
     "name": "Alice Sender",
     "phone": "(+33) 0123456789",
-    "email": "alice@sender.com",
+    "email": "alice@example.com",
     "website": null,
     "company": "QuBit Technologies",
     "siren": "123456789",
@@ -22,7 +22,7 @@
   "recipient": {
     "name": "Bob Recipient",
     "phone": null,
-    "email": "bob@recipient.com",
+    "email": "bob@example.com",
     "address": {
       "number": "386",
       "street": "Rte de Meyrin",
@@ -40,7 +40,7 @@
     {
       "description": "product 505",
       "quantity": 1,
-      "price_per_unit": 234
+      "price_per_unit": 200.00
     }
   ]
 }
