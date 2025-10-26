@@ -6,7 +6,6 @@ class TestGenerateInvoiceFromJson(unittest.TestCase):
 
     def setUp(self):
         self.invoice_data = {
-            'logo_path': './example_config/example_logo.png',
             'save_location': './',
             'invoice_date': '2023-09-04',
             'footer_text': 'Some legal text.',
