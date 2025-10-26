@@ -16,6 +16,29 @@ class LineItem:
     def price(self) -> Decimal:
         return self.quantity * self.price_per_unit
 
+    def __post_init__(self):
+        self._validate_quantity()
+        self._validate_price_per_unit()
+        self._validate_description()
+
+    def _validate_quantity(self):
+        if self.quantity <= 0:
+            raise ValueError("Quantity must be a positive integer.")
+        if not isinstance(self.quantity, int):
+            raise ValueError("Quantity must be an integer.")
+
+    def _validate_price_per_unit(self):
+        if self.price_per_unit < 0:
+            raise ValueError("Price per unit must be a positive number.")
+        if not isinstance(self.price_per_unit, Decimal) and not isinstance(self.price_per_unit, float):
+            raise ValueError("Price per unit must be a decimal.")
+
+    def _validate_description(self):
+        if self.description == "":
+            raise ValueError("Description cannot be empty.")
+        if not isinstance(self.description, str):
+            raise ValueError("Description must be a string.")
+
 
 class InvoiceData:
     """Class representing all the data for a complete invoice."""
