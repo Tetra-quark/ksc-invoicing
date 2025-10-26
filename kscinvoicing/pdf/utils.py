@@ -36,6 +36,8 @@ def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
     return output
 
 
+CONFIG_FOLDER = Path(__file__).parents[2] / "config"
+
 @dataclass
 class StyleConfig:
     cfg: dict
@@ -44,7 +46,7 @@ class StyleConfig:
 
     @staticmethod
     def load_font(font_path: str) -> TrueTypeFont:
-        return TrueTypeFont.true_type_font_from_file(Path(font_path))
+        return TrueTypeFont.true_type_font_from_file(CONFIG_FOLDER / font_path)
 
     def __post_init__(self):
         self.primary_font = self.load_font(self.cfg['primary_font'])
@@ -53,7 +55,7 @@ class StyleConfig:
 
 def load_style_config() -> StyleConfig:
     """Load style configuration from json file."""
-    style_path = "./style.json"
+    style_path = CONFIG_FOLDER / "style.json"
     with open(style_path, "r") as file:
         style_cfg = json.load(file)
     style = StyleConfig(style_cfg)
