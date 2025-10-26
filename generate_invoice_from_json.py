@@ -70,8 +70,8 @@ def generate_invoice(data: dict) -> BorbInvoice:
 
     invoice_with_pdf = build_invoice(
         invoice=invoice,
-        logopath=data['logo_path'],
-        footer_text=data['footer_text'],
+        logo_path=data.get('logo_path', None),
+        footer_text=data.get('footer_text', None),
     )
 
     return invoice_with_pdf

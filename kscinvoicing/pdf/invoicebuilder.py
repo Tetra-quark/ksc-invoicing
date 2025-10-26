@@ -12,7 +12,6 @@ from borb.pdf import (
     TableCell,
     Page,
     SingleColumnLayout,
-    PDF,
     Document,
 )
 from PIL import Image as PILImage
@@ -36,20 +35,26 @@ def get_image_dimensions(path) -> tuple[int, int]:
 
 def build_invoice(
     invoice: InvoiceData,
-    logopath: str,
+    logo_path: str = None,
     logo_width: int = 200,
     footer_text: str = None,
 ) -> BorbInvoice:
-    """Main method to build invoice."""
-
-    # TODO this could really do with better refactoring.. Do I split invoice build into more methods?
-    #  Do have a master method that gets called once in main script or do I build the object method by method
-    #  in the main script?
-    #  What are the pros/cons of doing one over the other?
-
-    w, h = get_image_dimensions(logopath)
-    logo_height = logo_width * h // w
-    logo = Image(Path(logopath), width=Decimal(logo_width), height=Decimal(logo_height))
+    """
+    Main method to build borb invoice. Returns BorbInvoice object containing borb pdf document and invoice data.
+    Args:
+        invoice: InvoiceData object containing invoice data.
+        logo_path: Path to logo image file.
+        logo_width: Width of logo image in pixels.
+        footer_text: Optional text to display in footer.
+    Returns:
+        BorbInvoice object containing borb pdf document and invoice data.
+    """
+    if logo_path is None:
+        logo = None
+    else:
+        w, h = get_image_dimensions(logo_path)
+        logo_height = logo_width * h // w
+        logo = Image(Path(logo_path), width=Decimal(logo_width), height=Decimal(logo_height))
 
     contact_details_schema = _build_contact_details_schema(invoice.sender, invoice.recipient)
     contact_details_table = contact_details_schema.build_table()
@@ -79,12 +84,14 @@ def build_invoice(
     )
     return BorbInvoice(invoice=invoice, document=pdf)
 
-def _build_invoice_document(logo: Image,
-                           contact_details_table: FixedColumnWidthTable,
-                           invoice_information_table: FixedColumnWidthTable,
-                           itemised_table: FixedColumnWidthTable,
-                           totals_table: FixedColumnWidthTable,
-                           footer_text: str) -> Document:
+def _build_invoice_document(
+    contact_details_table: FixedColumnWidthTable,
+    invoice_information_table: FixedColumnWidthTable,
+    itemised_table: FixedColumnWidthTable,
+    totals_table: FixedColumnWidthTable,
+    footer_text: str = None,
+    logo: Image = None,
+) -> Document:
     """Creates a pdf object for invoice using borb tables."""
     # Create document & add page
     pdf = Document()
@@ -95,7 +102,9 @@ def _build_invoice_document(logo: Image,
     layout = SingleColumnLayout(page)
     layout.vertical_margin = page.get_page_info().get_height() * Decimal(0.02)
 
-    layout.add(logo)
+    if logo is not None:
+        layout.add(logo)
+
     layout.add(Paragraph(" "))  # vertical space
     layout.add(contact_details_table)  # Invoice personal & recipient information
     layout.add(VerticalSpacer(size=Decimal('15')))
@@ -104,12 +113,10 @@ def _build_invoice_document(logo: Image,
     layout.add(itemised_table)  # Invoice items
     layout.add(VerticalSpacer(size=Decimal('10')))
     layout.add(totals_table)  # Invoice totals summary
-    if footer_text:
+    if footer_text is not None:
         _add_footer(page, footer_text)
 
     return pdf
-
-
 
 
 def _add_footer(page: Page, footer_text: str):
