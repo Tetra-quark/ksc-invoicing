@@ -1,4 +1,5 @@
 # KSC Invoicing: A PDF Invoice Generator
+A PDF invoice generator by Koppanyi Scientific Consulting.
 
 ## Description
 A Python tool for generating PDF invoices with some basic customisation using the borb pdf library.
