@@ -62,5 +62,9 @@ and have Open Font Licences.
 - Add more unit tests
 
 
-## Disclaimer
-This software is provided "as-is" without any warranty.
+## License
+
+This project uses borb (https://github.com/jorisschellekens/borb), 
+which is licensed under the AGPL-3.0 or commercial license.
+
+If you use this software, you must comply with the AGPL-3.0 terms.
