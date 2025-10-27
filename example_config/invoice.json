@@ -3,6 +3,9 @@
   "save_location": "./",
   "invoice_date": "2023-09-04",
   "footer_text": "Some legal text.",
+  "currency": "EUR",
+  "discount": 10.00,
+  "language": "fr",
 
   "sender": {
     "name": "Alice Sender",
@@ -33,12 +36,12 @@
   },
   "lineitem_details": [
     {
-      "description": "service 42",
+      "description": "Service 42",
       "quantity": 3,
       "price_per_unit": 50.00
     },
     {
-      "description": "product 505",
+      "description": "Product 505 - A really long description that will be wrapped to fit the table cell.",
       "quantity": 1,
       "price_per_unit": 200.00
     }
