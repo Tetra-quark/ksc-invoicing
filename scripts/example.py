@@ -59,7 +59,8 @@ def main():
         date=datetime.now(),
         save_folder="./",
         discount=0.0,
-        tax_rate=0.0
+        tax_rate=0.0,
+        currency="EUR",
     )
 
     invoice = build_invoice(

@@ -9,6 +9,8 @@ class TestGenerateInvoiceFromJson(unittest.TestCase):
             'save_location': './',
             'invoice_date': '2023-09-04',
             'footer_text': 'Some legal text.',
+            'currency': 'USD',
+            'language': 'en',
             'sender': {
                 'name': 'Alice Sender',
                 'phone': '(+33) 0123456789',

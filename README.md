@@ -32,6 +32,11 @@ conda activate kscinvoicing
 
 ```
 
+You can run the tests to ensure everything is working properly.
+```shell
+python -m unittest discover tests
+```
+
 ## How to Use
 
 Invoices can be generated from the command line as follows:
