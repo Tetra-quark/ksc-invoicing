@@ -12,6 +12,8 @@ with a separate invoicing system for example). A plain-text log file keeps track
 - Easy JSON-based input (see `example_config/invoice.json`)
 - Customisable fonts and colours (see `config/`)
 - Tracks invoice numbers automatically (via a log file)
+- Supports english and french language
+- Supports invoices in multiple currencies (EUR, USD, GBP and CHF)
 
 ## Directory Structure
 - `kscinvoicing/` — Core package
