@@ -65,12 +65,16 @@ def generate_invoice(data: dict) -> BorbInvoice:
         items=extract_lineitems_from_json(data),
         date=invoice_date,
         save_folder=Path(data['save_location']),
+        discount=Decimal(data.get('discount', 0)),
+        tax_rate=Decimal(data.get('tax_rate', 0)),
+        currency=data['currency'],
     )
 
     invoice_with_pdf = build_invoice(
         invoice=invoice,
         logo_path=data.get('logo_path', None),
         footer_text=data.get('footer_text', None),
+        language=data['language'],
     )
 
     return invoice_with_pdf
