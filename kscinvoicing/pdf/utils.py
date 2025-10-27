@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
 import json
+import enum
 
 from borb.pdf import (
     RGBColor,
@@ -12,9 +13,26 @@ from borb.pdf import (
 )
 
 locale.setlocale(locale.LC_ALL, 'fr_FR')
-locale._override_localeconv['n_sign_posn'] = 1
+locale._override_localeconv['n_sign_posn'] = 1  # not quite sure what purpose this has.
 
-CURRENCY_SYMBOL = "€"
+class Language(enum.Enum):
+    """Supported languages."""
+    FR = "fr"
+    EN = "en"
+
+class Currency(enum.Enum):
+    """Supported currencies."""
+    EUR = "EUR"
+    USD = "USD"
+    GBP = "GBP"
+    CHF = "CHF"
+
+CURRENCY_SYMBOLS = {
+    Currency.EUR: "€",
+    Currency.USD: "$",
+    Currency.GBP: "£",
+    Currency.CHF: "CHF",
+}
 
 COLOR = {
     'white': RGBColor(Decimal(1), Decimal(1), Decimal(1)),
@@ -29,11 +47,28 @@ def clean_text(val):
     return val.replace('\u202F', ' ')
 
 
-def format_money(amount: Decimal, symbol: str = CURRENCY_SYMBOL) -> str:
-    """Formats Decimal type for printing on invoice."""
-    fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
-    output = symbol + " " + clean_text(fmtd_amount)
-    return output
+def format_money_factory(currency: Currency) -> callable:
+    """
+    Factory function to create format_money function for specific currency.
+    The format_money function formats Decimal type for printing on invoice.
+    """
+    symbol = CURRENCY_SYMBOLS[currency]
+    def format_money(amount: Decimal) -> str:
+        """Formats Decimal type for printing on invoice."""
+        fmtd_amount = locale.currency(amount, grouping=True, symbol=False)
+        output = symbol + " " + clean_text(f"{fmtd_amount:>8}")
+        return output
+    return format_money
+
+
+def get_headings_for_language(language: Language) -> list[str]:
+    match language:
+        case Language.FR:
+            return ["Description", "Quantité", "Prix Unité", "Total"]
+        case Language.EN:
+            return ["Description", "Quantity", "Unit Price", "Total"]
+        case _:
+            raise ValueError(f"Unsupported language: {language}")
 
 
 CONFIG_FOLDER = Path(__file__).parents[2] / "config"
