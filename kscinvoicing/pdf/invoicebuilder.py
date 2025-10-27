@@ -1,3 +1,4 @@
+from math import radians
 from pathlib import Path
 from datetime import datetime
 from typing import Optional
@@ -261,60 +262,57 @@ def _build_itemised_table(line_items: list[LineItem], currency: Currency, lang: 
     headings = get_headings_for_language(lang)
     assert len(headings) == 4
 
-    table = FixedColumnWidthTable(number_of_rows=len(line_items) + 1,
-                                  number_of_columns=4,
-                                  column_widths=[Decimal(3), Decimal(1), Decimal(1), Decimal(1)])
+    def heading_helper(text: str) -> TableCell:
+        return TableCell(
+            Paragraph(
+                text,
+                font_color=COLOR['white'],
+                font=STYLE.title_font,
+                horizontal_alignment=Alignment.LEFT,
+                vertical_alignment=Alignment.MIDDLE,
+                # padding_top=Decimal(5),
+                # padding_left=Decimal(5),
+            )
+        )
+
+    def row_content_helper(text: str) -> TableCell:
+        return TableCell(
+            Paragraph(
+                text,
+                font=STYLE.primary_font,
+                respect_newlines_in_text=True,
+            ),
+        )
+
+    table = FixedColumnWidthTable(
+        number_of_rows=len(line_items) + 1,
+        number_of_columns=4,
+        column_widths=[Decimal(3), Decimal(1), Decimal(1), Decimal(1)],
+    )
 
     for heading in headings:
-        p = Paragraph(heading,
-                      font_color=COLOR['white'],
-                      font=STYLE.title_font,
-                      horizontal_alignment=Alignment.LEFT)
-        table.add(TableCell(p, background_color=COLOR['dark_blue']))
+        table.add(heading_helper(heading))
 
     for row_num, item in enumerate(line_items):
 
-        # color rows
-        if row_num % 2 == 0:
-            c = COLOR['lighter_grey_blue']
-        else:
-            c = COLOR['light_grey_blue']
+        table.add(row_content_helper(item.description))
+        table.add(row_content_helper(str(item.quantity)))
+        table.add(row_content_helper(format_money(item.price_per_unit)))
+        table.add(row_content_helper(format_money(item.price())))
 
-        # row content
-        table.add(TableCell(
-            Paragraph(
-                item.description,
-                font=STYLE.primary_font,
-                horizontal_alignment=Alignment.LEFT,
-            ),
-            background_color=c),
-        )
-        table.add(TableCell(
-            Paragraph(
-                str(item.quantity),
-                font=STYLE.primary_font,
-                horizontal_alignment=Alignment.LEFT,
-            ),
-            background_color=c),
-        )
-        table.add(TableCell(
-            Paragraph(
-                format_money(item.price_per_unit),
-                font=STYLE.primary_font,
-                horizontal_alignment=Alignment.LEFT,
-            ),
-            background_color=c),
-        )
-        table.add(TableCell(
-            Paragraph(
-                format_money(item.price()),
-                font=STYLE.primary_font,
-                horizontal_alignment=Alignment.LEFT,
-            ),
-            background_color=c),
-        )
+    table.even_odd_row_colors(
+        even_row_color=COLOR['light_grey_blue'],
+        odd_row_color=COLOR['lighter_grey_blue'],
+        header_row_color=COLOR['dark_blue'],
+    )
 
-        table.set_padding_on_all_cells(Decimal(2), Decimal(2), Decimal(10), Decimal(2))
-        table.no_borders()
+    table.set_padding_on_all_cells(
+        padding_top=Decimal(7),
+        padding_right=Decimal(5),
+        padding_bottom=Decimal(2),
+        padding_left=Decimal(5),
+    )
+
+    table.no_borders()
 
     return table
