@@ -47,6 +47,9 @@ python -m kscinvoicing.cli .\example_config\invoice.json
 ```
 It is also possible to generate invoices via the package API. See the examples in `scripts/` for more details. 
 
+Example output:
+![Example Invoice](example_config/example_invoice.png)
+
 ### Fonts
 Fonts can be customised in `config/style.json` by supplying the path to a `.ttf` file. 
 If no font is supplied, the default font will be used which is packaged with this repository.
