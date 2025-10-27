@@ -1,11 +1,11 @@
 # KSC Invoicing: A PDF Invoice Generator
 
 ## Description
-A Python tool for generating PDF invoices with some basic customisation. 
+A Python tool for generating PDF invoices with some basic customisation using the borb pdf library.
 Primarily designed to generate legally compliant pdf invoices for freelancers under the French micro-enterprise status.
-The invoice data is primarily provided through json. 
-The borb pdf library is used for the layout and creation of documents.
-A plain-text log file keeps track of invoice numbers.
+
+The invoice data is primarily provided through json but can be adapted through the use of the package API (and integrated
+with a separate invoicing system for example). A plain-text log file keeps track of invoice numbers for the basic use case.
 
 ## Features
 - Generates professional PDF invoices (made specifically for French auto-entrepreneurs).
