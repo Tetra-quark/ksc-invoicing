@@ -81,7 +81,10 @@ class StyleConfig:
 
     @staticmethod
     def load_font(font_path: str) -> TrueTypeFont:
-        return TrueTypeFont.true_type_font_from_file(CONFIG_FOLDER / font_path)
+        full_font_path = CONFIG_FOLDER / font_path
+        if not full_font_path.exists(): # borb throws obscure AssertionError better to catch beforehand
+            raise FileNotFoundError(f"Font file not found: {full_font_path}")
+        return TrueTypeFont.true_type_font_from_file(full_font_path)
 
     def __post_init__(self):
         self.primary_font = self.load_font(self.cfg['primary_font'])
