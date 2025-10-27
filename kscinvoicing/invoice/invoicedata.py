@@ -49,6 +49,7 @@ class InvoiceData:
         recipient: IndividualRecipient,
         items: list[LineItem],
         save_folder: Path,
+        currency: str,
         date: datetime = datetime.now(),
         due_date: datetime = None,
         discount: Decimal = Decimal("0"),
@@ -65,6 +66,7 @@ class InvoiceData:
         self.due_date = due_date
         self.invoice_number = self.logger.invoice_number
 
+        self.currency = currency
         self.discount = discount
         self.tax_rate = tax_rate
 

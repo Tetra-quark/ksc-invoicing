@@ -22,9 +22,9 @@ from kscinvoicing.pdf.borbinvoice import BorbInvoice
 from kscinvoicing.pdf.tableschema import TableSchema
 from kscinvoicing.pdf.utils import (
     VerticalSpacer,
-    format_money,
+    format_money_factory,
     STYLE,
-    COLOR,
+    COLOR, Currency, get_headings_for_language, Language,
 )
 
 
@@ -38,6 +38,7 @@ def build_invoice(
     logo_path: str = None,
     logo_width: int = 200,
     footer_text: str = None,
+    language: str = "fr",
 ) -> BorbInvoice:
     """
     Main method to build borb invoice. Returns BorbInvoice object containing borb pdf document and invoice data.
@@ -69,12 +70,19 @@ def build_invoice(
                                                             due_date=invoice.due_date)
     invoice_information_table = invoice_information_schema.build_table()
 
-    itemised_table = _build_itemised_table(invoice.items)
+    itemised_table = _build_itemised_table(
+        line_items=invoice.items,
+        currency=Currency(invoice.currency),
+        lang=Language(language),
+    )
 
-    totals_schema = _build_totals_schema(subtotal=invoice.subtotal,
-                                         total=invoice.total,
-                                         discount=invoice.discount,
-                                         tax=invoice.tax)
+    totals_schema = _build_totals_schema(
+        subtotal=invoice.subtotal,
+        total=invoice.total,
+        discount=invoice.discount,
+        tax=invoice.tax,
+        currency=Currency(invoice.currency),
+    )
     totals_table = totals_schema.build_table()
 
     pdf = _build_invoice_document(
@@ -206,18 +214,23 @@ def _build_contact_details_schema(sender: CompanySender, recipient: IndividualRe
     return tableschema
 
 
-def _build_totals_schema(subtotal: Decimal,
-                        total: Decimal,
-                        discount: Decimal,
-                        tax: Decimal) -> TableSchema:
+def _build_totals_schema(
+        subtotal: Decimal,
+        total: Decimal,
+        discount: Decimal,
+        tax: Decimal,
+        currency: Currency,
+) -> TableSchema:
     """Builds TableSchema """
+
+    format_money = format_money_factory(currency)
 
     tabledata = []
 
     def row_helper(label: str, value: str) -> list[str]:
         return [" ", label, value]
 
-    # don't show totals if unneccesary, is there a better way to write this logic?
+    # don't show totals if unnecessary
     if discount != Decimal('0') or tax != Decimal('0'):
         fmt_subtotal = format_money(subtotal)
         tabledata.append(row_helper("Sous-Total", fmt_subtotal))
@@ -241,10 +254,12 @@ def _build_totals_schema(subtotal: Decimal,
     return tableschema
 
 
-def _build_itemised_table(line_items: list[LineItem]) -> FixedColumnWidthTable:
+def _build_itemised_table(line_items: list[LineItem], currency: Currency, lang: Language) -> FixedColumnWidthTable:
     """Builds Borb table containing line items for the invoice."""
 
-    headings = ["Description", "Quantité", "Prix Unité", "Total"]
+    format_money = format_money_factory(currency)
+    headings = get_headings_for_language(lang)
+    assert len(headings) == 4
 
     table = FixedColumnWidthTable(number_of_rows=len(line_items) + 1,
                                   number_of_columns=4,
