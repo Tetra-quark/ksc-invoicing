@@ -1,0 +1,9 @@
+[project]
+name = "ksc-invoicing"
+version = "0.1.0"
+description = "Invoicing utility for french micro-entrepreneurs."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "borb==2.1.25",
+]
