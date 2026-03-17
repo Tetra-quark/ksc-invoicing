@@ -21,7 +21,6 @@ from kscinvoicing.pdf.invoicebuilder import build_invoice
 def _init_state():
     st.session_state.setdefault("line_items", [{"description": "", "desc_mode": "history", "quantity": 1, "price_per_unit": 0.0}])
     st.session_state.setdefault("generated_pdf_path", None)
-    st.session_state.setdefault("client_edit_mode", False)
     st.session_state.setdefault("delete_confirm", False)
 
 
@@ -99,83 +98,26 @@ def _tab_generate():
     history_keys = list(history.keys())
 
     # ---- Sender ----
-    saved_sender = profile_store.load_sender() or {}
-    with st.expander("Sender details", expanded=not bool(saved_sender)):
-        s = saved_sender
-        sender_siren = st.text_input("SIREN", value=s.get("siren", ""), key="s_siren")
-        sender_company = st.text_input("Company name", value=s.get("company", ""), key="s_company")
-        sender_name = st.text_input("Contact name", value=s.get("name", ""), key="s_name")
-        sender_email = st.text_input("Email", value=s.get("email", ""), key="s_email")
-        c1, c2 = st.columns(2)
-        sender_phone = c1.text_input("Phone", value=s.get("phone", "") or "", key="s_phone")
-        sender_website = c2.text_input("Website", value=s.get("website", "") or "", key="s_website")
-        st.markdown("**Address**")
-        sender_addr = _address_form("sender", s.get("address", {}))
-        if st.button("Save to sender profile", key="save_sender_btn"):
-            profile_store.save_sender({
-                "siren": sender_siren, "company": sender_company, "name": sender_name,
-                "email": sender_email, "phone": sender_phone or None, "website": sender_website or None,
-                "address": sender_addr,
-            })
-            st.success("Sender profile saved.")
+    st.subheader("Sender")
+    saved_sender = profile_store.load_sender()
+    if saved_sender:
+        st.info(f"**{saved_sender.get('name', '')}** — {saved_sender.get('company', '')} | {saved_sender.get('email', '')}")
+    else:
+        st.warning("No sender profile saved. Go to the Sender Profile tab.")
 
     # ---- Client ----
     st.subheader("Client")
     clients = profile_store.load_clients()
-    client_options = ["-- New client --"] + list(clients.keys())
-    selected_client = st.selectbox("Select client", client_options, key="selected_client_gen")
-
-    if selected_client == "-- New client --":
-        c_data = {}
-        client_type = st.radio("Client type", ["Individual", "Company"], horizontal=True, key="new_client_type_gen")
-        show_company = client_type == "Company"
+    if not clients:
+        st.warning("No clients saved. Go to the Manage Clients tab.")
+        selected_client = None
     else:
+        client_options = list(clients.keys())
+        selected_client = st.selectbox("Select client", client_options, key="selected_client_gen")
         c_data = clients[selected_client]
-        show_company = c_data.get("type") == "company"
-        client_type = "Company" if show_company else "Individual"
-        if st.button("Edit this client", key="edit_client_gen"):
-            st.session_state["client_edit_mode"] = not st.session_state["client_edit_mode"]
-
-    editable = selected_client == "-- New client --" or st.session_state.get("client_edit_mode", False)
-
-    if show_company:
-        c1, c2 = st.columns(2)
-        client_company_name = c1.text_input("Company name", value=c_data.get("company_name", ""),
-                                             key="c_company_name", disabled=not editable)
-        client_siren = c2.text_input("SIREN", value=c_data.get("siren", ""),
-                                      key="c_siren", disabled=not editable)
-    else:
-        client_company_name = ""
-        client_siren = ""
-
-    client_name = st.text_input("Contact name", value=c_data.get("name", ""),
-                                  key="c_name", disabled=not editable)
-    client_email = st.text_input("Email", value=c_data.get("email", ""),
-                                   key="c_email", disabled=not editable)
-    c1, c2 = st.columns(2)
-    client_phone = c1.text_input("Phone", value=c_data.get("phone", "") or "",
-                                   key="c_phone", disabled=not editable)
-    client_website = c2.text_input("Website", value=c_data.get("website", "") or "",
-                                    key="c_website", disabled=not editable)
-    st.markdown("**Address**")
-    # render address — disabled inputs aren't directly supported in _address_form so we use it always
-    client_addr = _address_form("client", c_data.get("address", {}))
-
-    if selected_client == "-- New client --":
-        save_label = st.text_input("Save as (display name)", value=client_company_name or client_name,
-                                    key="new_client_save_key")
-        if st.button("Save new client", key="save_new_client_btn"):
-            entry = {
-                "type": "company" if show_company else "individual",
-                "name": client_name, "email": client_email,
-                "phone": client_phone or None, "website": client_website or None,
-                "address": client_addr,
-            }
-            if show_company:
-                entry["company_name"] = client_company_name
-                entry["siren"] = client_siren
-            profile_store.save_client(save_label, entry)
-            st.success(f"Client '{save_label}' saved.")
+        type_label = "Company" if c_data.get("type") == "company" else "Individual"
+        company_info = f" — {c_data['company_name']}" if c_data.get("type") == "company" else ""
+        st.info(f"**{selected_client}**{company_info} ({type_label}) | {c_data.get('email', '')}")
 
     # ---- Line items ----
     st.subheader("Line items")
@@ -184,7 +126,6 @@ def _tab_generate():
     for i, item in enumerate(st.session_state["line_items"]):
         c1, c2, c3, c4 = st.columns([4, 1, 1.5, 0.5])
 
-        # Description: selectbox or free text
         mode_options = ["-- Custom --"] + history_keys
         current_desc = item.get("description", "")
         default_mode_idx = history_keys.index(current_desc) + 1 if current_desc in history_keys else 0
@@ -208,7 +149,6 @@ def _tab_generate():
                                  step=0.01, format="%.2f", key=f"item_price_{i}",
                                  label_visibility="collapsed")
 
-        # update session state immediately so values persist across reruns
         st.session_state["line_items"][i] = {"description": desc, "quantity": qty, "price_per_unit": price}
 
         if c4.button("✕", key=f"del_item_{i}"):
@@ -251,10 +191,10 @@ def _tab_generate():
     st.divider()
     if st.button("Generate Invoice", type="primary"):
         errors = []
-        if not st.session_state.get("s_name") and not saved_sender.get("name"):
-            errors.append("Sender name is required.")
-        if not client_name:
-            errors.append("Client name is required.")
+        if saved_sender is None:
+            errors.append("No sender profile saved. Go to the Sender Profile tab.")
+        if selected_client is None:
+            errors.append("No clients saved. Add a client in the Manage Clients tab.")
         valid_items = [it for it in st.session_state["line_items"] if it.get("description")]
         if not valid_items:
             errors.append("At least one line item with a description is required.")
@@ -264,23 +204,8 @@ def _tab_generate():
                 st.error(e)
         else:
             try:
-                sender_dict = {
-                    "siren": sender_siren, "company": sender_company, "name": sender_name,
-                    "email": sender_email, "phone": sender_phone or None,
-                    "website": sender_website or None, "address": sender_addr,
-                }
-                client_dict = {
-                    "type": "company" if show_company else "individual",
-                    "name": client_name, "email": client_email,
-                    "phone": client_phone or None, "website": client_website or None,
-                    "address": client_addr,
-                }
-                if show_company:
-                    client_dict["company_name"] = client_company_name
-                    client_dict["siren"] = client_siren
-
-                sender_obj = _build_sender(sender_dict)
-                recipient_obj = _build_recipient(client_dict)
+                sender_obj = _build_sender(saved_sender)
+                recipient_obj = _build_recipient(clients[selected_client])
                 line_item_objs = [
                     LineItem(
                         description=it["description"],
@@ -308,7 +233,6 @@ def _tab_generate():
                     tax_rate=Decimal(str(tax_rate)),
                 )
 
-                # Handle logo upload
                 logo_path = None
                 tmp_dir = None
                 if logo_file is not None:
@@ -326,14 +250,12 @@ def _tab_generate():
                 )
                 borb_invoice.save()
 
-                # Record line item history
                 profile_store.record_line_items([
                     {"description": it["description"], "quantity": int(it["quantity"]),
                      "price_per_unit": str(it["price_per_unit"])}
                     for it in valid_items
                 ])
 
-                # Clean up tmp logo
                 if tmp_dir and logo_path:
                     Path(logo_path).unlink(missing_ok=True)
 
@@ -358,10 +280,94 @@ def _tab_generate():
 # ---------------------------------------------------------------------------
 
 def _tab_clients():
+    import pandas as pd
+
     clients = profile_store.load_clients()
 
-    st.subheader("Add new client")
-    with st.expander("Add new client", expanded=not bool(clients)):
+    # ---- Client list ----
+    st.subheader("Saved clients")
+    selected_key = None
+    if clients:
+        rows = [
+            {
+                "Reference": key,
+                "Type": "Company" if data.get("type") == "company" else "Individual",
+                "Company": data.get("company_name", "") if data.get("type") == "company" else "",
+                "Email": data.get("email", ""),
+            }
+            for key, data in clients.items()
+        ]
+        df = pd.DataFrame(rows)
+        event = st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True,
+            on_select="rerun",
+            selection_mode="single-row",
+        )
+        selected_rows = event.selection.rows if event else []
+        if selected_rows:
+            selected_key = rows[selected_rows[0]]["Reference"]
+    else:
+        st.info("No clients saved yet.")
+
+    # ---- Edit selected client ----
+    if selected_key:
+        c_data = clients[selected_key]
+        st.subheader(f"Edit: {selected_key}")
+        is_co = c_data.get("type") == "company"
+
+        e_ref_name = st.text_input("Reference name", value=selected_key, key=f"e_ref_name_{selected_key}")
+
+        if is_co:
+            c1, c2 = st.columns(2)
+            e_company = c1.text_input("Company name", value=c_data.get("company_name", ""), key=f"e_company_{selected_key}")
+            e_siren = c2.text_input("SIREN", value=c_data.get("siren", ""), key=f"e_siren_{selected_key}")
+        else:
+            e_company = ""
+            e_siren = ""
+
+        e_email = st.text_input("Email", value=c_data.get("email", ""), key=f"e_email_{selected_key}")
+        c1, c2 = st.columns(2)
+        e_phone = c1.text_input("Phone", value=c_data.get("phone", "") or "", key=f"e_phone_{selected_key}")
+        e_website = c2.text_input("Website", value=c_data.get("website", "") or "", key=f"e_website_{selected_key}")
+        st.markdown("**Address**")
+        e_addr = _address_form(f"edit_client_{selected_key}", c_data.get("address", {}))
+
+        c1, c2 = st.columns(2)
+        if c1.button("Save changes", key="save_edit_c_btn"):
+            entry = {
+                "type": "company" if is_co else "individual",
+                "name": e_ref_name, "email": e_email,
+                "phone": e_phone or None, "website": e_website or None,
+                "address": e_addr,
+            }
+            if is_co:
+                entry["company_name"] = e_company
+                entry["siren"] = e_siren
+            if e_ref_name != selected_key:
+                profile_store.delete_client(selected_key)
+            profile_store.save_client(e_ref_name, entry)
+            st.success("Client updated.")
+            st.rerun()
+
+        if c2.button("Delete client", key="delete_c_btn"):
+            st.session_state["delete_confirm"] = True
+
+        if st.session_state.get("delete_confirm"):
+            st.warning(f"Delete **{selected_key}**? This cannot be undone.")
+            col1, col2 = st.columns(2)
+            if col1.button("Yes, delete", key="confirm_delete_btn"):
+                profile_store.delete_client(selected_key)
+                st.session_state["delete_confirm"] = False
+                st.success(f"Client '{selected_key}' deleted.")
+                st.rerun()
+            if col2.button("Cancel", key="cancel_delete_btn"):
+                st.session_state["delete_confirm"] = False
+                st.rerun()
+
+    # ---- Add new client ----
+    with st.expander("+ Add new client"):
         new_type = st.radio("Type", ["Individual", "Company"], horizontal=True, key="new_c_type")
         is_company = new_type == "Company"
         if is_company:
@@ -371,19 +377,17 @@ def _tab_clients():
         else:
             new_company_name = ""
             new_siren = ""
-        new_name = st.text_input("Contact name", key="new_c_name")
+        save_key = st.text_input("Reference name", value=new_company_name, key="new_c_save_key")
         new_email = st.text_input("Email", key="new_c_email")
         c1, c2 = st.columns(2)
         new_phone = c1.text_input("Phone", key="new_c_phone")
         new_website = c2.text_input("Website", key="new_c_website")
         st.markdown("**Address**")
         new_addr = _address_form("new_client", {})
-        save_key = st.text_input("Save as (display name)", value=new_company_name or new_name,
-                                   key="new_c_save_key")
         if st.button("Save client", key="save_new_c_btn"):
             entry = {
                 "type": "company" if is_company else "individual",
-                "name": new_name, "email": new_email,
+                "name": save_key, "email": new_email,
                 "phone": new_phone or None, "website": new_website or None,
                 "address": new_addr,
             }
@@ -392,60 +396,6 @@ def _tab_clients():
                 entry["siren"] = new_siren
             profile_store.save_client(save_key, entry)
             st.success(f"Client '{save_key}' saved.")
-            st.rerun()
-
-    if not clients:
-        st.info("No clients saved yet.")
-        return
-
-    st.subheader("Edit / delete existing client")
-    selected = st.selectbox("Select client", list(clients.keys()), key="manage_client_sel")
-    c_data = clients[selected]
-    is_co = c_data.get("type") == "company"
-
-    if is_co:
-        c1, c2 = st.columns(2)
-        e_company = c1.text_input("Company name", value=c_data.get("company_name", ""), key="e_company")
-        e_siren = c2.text_input("SIREN", value=c_data.get("siren", ""), key="e_siren")
-    else:
-        e_company = ""
-        e_siren = ""
-
-    e_name = st.text_input("Contact name", value=c_data.get("name", ""), key="e_name")
-    e_email = st.text_input("Email", value=c_data.get("email", ""), key="e_email")
-    c1, c2 = st.columns(2)
-    e_phone = c1.text_input("Phone", value=c_data.get("phone", "") or "", key="e_phone")
-    e_website = c2.text_input("Website", value=c_data.get("website", "") or "", key="e_website")
-    st.markdown("**Address**")
-    e_addr = _address_form("edit_client", c_data.get("address", {}))
-
-    c1, c2 = st.columns(2)
-    if c1.button("Save changes", key="save_edit_c_btn"):
-        entry = {
-            "type": "company" if is_co else "individual",
-            "name": e_name, "email": e_email,
-            "phone": e_phone or None, "website": e_website or None,
-            "address": e_addr,
-        }
-        if is_co:
-            entry["company_name"] = e_company
-            entry["siren"] = e_siren
-        profile_store.save_client(selected, entry)
-        st.success("Client updated.")
-
-    if c2.button("Delete client", key="delete_c_btn"):
-        st.session_state["delete_confirm"] = True
-
-    if st.session_state.get("delete_confirm"):
-        st.warning(f"Delete **{selected}**? This cannot be undone.")
-        col1, col2 = st.columns(2)
-        if col1.button("Yes, delete", key="confirm_delete_btn"):
-            profile_store.delete_client(selected)
-            st.session_state["delete_confirm"] = False
-            st.success(f"Client '{selected}' deleted.")
-            st.rerun()
-        if col2.button("Cancel", key="cancel_delete_btn"):
-            st.session_state["delete_confirm"] = False
             st.rerun()
 
 
