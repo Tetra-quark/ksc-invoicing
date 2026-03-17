@@ -2,7 +2,7 @@
 Streamlit web UI for ksc-invoicing.
 Launch via: kscinvoicing serve
 """
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -167,9 +167,11 @@ def _tab_generate():
     st.subheader("Invoice settings")
     c1, c2 = st.columns(2)
     invoice_date = c1.date_input("Invoice date", value=date.today(), key="inv_date")
+    due_date = c2.date_input("Due date", value=date.today() + timedelta(days=30), key="inv_due_date",
+                              disabled=not st.session_state.get("due_date_enabled", False))
+
+    _, c2 = st.columns(2)
     due_date_enabled = c2.checkbox("Set due date", key="due_date_enabled")
-    due_date = c2.date_input("Due date", value=date.today(), key="inv_due_date",
-                              disabled=not due_date_enabled)
 
     c1, c2, c3 = st.columns(3)
     currency = c1.selectbox("Currency", ["EUR", "USD", "GBP", "CHF"], key="inv_currency")
