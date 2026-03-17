@@ -26,24 +26,21 @@ with a separate invoicing system for example). A plain-text log file keeps track
 
 ## Installation
 
-### Conda
+### uv
 ```shell
-conda env create -f env.yaml
-conda activate kscinvoicing
-
+uv sync
 ```
 
 You can run the tests to ensure everything is working properly.
 ```shell
-python -m unittest discover tests
+uv run python -m unittest discover tests
 ```
 
 ## How to Use
 
 Invoices can be generated from the command line as follows:
 ```shell
-python -m kscinvoicing.cli .\example_config\invoice.json
-
+uv run python -m kscinvoicing.cli example_config/invoice.json
 ```
 It is also possible to generate invoices via the package API. See the examples in `scripts/` for more details. 
 
