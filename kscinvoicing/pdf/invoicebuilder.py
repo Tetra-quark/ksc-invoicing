@@ -53,6 +53,7 @@ def build_invoice(
     """
     if logo_path is None:
         logo = None
+        print("Warning: no logo file specified.")
     elif not Path(logo_path).is_file():
         print(f"Warning: logo file '{logo_path}' not found.")
         logo = None

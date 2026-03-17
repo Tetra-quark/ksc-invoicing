@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from kscinvoicing.invoice.invoicedata import LineItem, InvoiceData
+from invoice.invoicedata import LineItem, InvoiceData
 
 
 class TestLineItem(unittest.TestCase):
