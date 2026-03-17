@@ -2,7 +2,6 @@
 Streamlit web UI for ksc-invoicing.
 Launch via: kscinvoicing serve
 """
-import tempfile
 from datetime import datetime, date
 from decimal import Decimal
 from pathlib import Path
@@ -101,7 +100,9 @@ def _tab_generate():
     st.subheader("Sender")
     saved_sender = profile_store.load_sender()
     if saved_sender:
-        st.info(f"**{saved_sender.get('name', '')}** — {saved_sender.get('company', '')} | {saved_sender.get('email', '')}")
+        logo_hint = f" | Logo: `{saved_sender['logo_path']}`" if saved_sender.get("logo_path") else " | No logo"
+        footer_hint = " | Footer set" if saved_sender.get("footer_text") else " | No footer"
+        st.info(f"**{saved_sender.get('name', '')}** — {saved_sender.get('company', '')} | {saved_sender.get('email', '')}{logo_hint}{footer_hint}")
     else:
         st.warning("No sender profile saved. Go to the Sender Profile tab.")
 
@@ -182,9 +183,6 @@ def _tab_generate():
     tax_rate = c2.number_input("Tax rate (0.20 = 20%)", min_value=0.0, max_value=1.0,
                                  value=0.0, step=0.01, format="%.2f", key="inv_tax_rate")
 
-    logo_file = st.file_uploader("Logo (PNG/JPG, optional)", type=["png", "jpg", "jpeg"],
-                                   key="inv_logo")
-    footer_text = st.text_area("Footer text (optional)", key="inv_footer")
     save_folder = st.text_input("Save folder", value="invoices", key="inv_save_folder")
 
     # ---- Generate ----
@@ -233,19 +231,14 @@ def _tab_generate():
                     tax_rate=Decimal(str(tax_rate)),
                 )
 
-                logo_path = None
-                tmp_dir = None
-                if logo_file is not None:
-                    tmp_dir = tempfile.mkdtemp()
-                    logo_path = str(Path(tmp_dir) / logo_file.name)
-                    with open(logo_path, "wb") as f:
-                        f.write(logo_file.getvalue())
+                saved_logo = saved_sender.get("logo_path") or None
+                saved_footer = saved_sender.get("footer_text") or None
 
                 borb_invoice = build_invoice(
                     invoice=invoice_data,
-                    logo_path=logo_path,
+                    logo_path=saved_logo,
                     logo_width=int(logo_width),
-                    footer_text=footer_text or None,
+                    footer_text=saved_footer,
                     language=language,
                 )
                 borb_invoice.save()
@@ -255,9 +248,6 @@ def _tab_generate():
                      "price_per_unit": str(it["price_per_unit"])}
                     for it in valid_items
                 ])
-
-                if tmp_dir and logo_path:
-                    Path(logo_path).unlink(missing_ok=True)
 
                 pdf_path = folder / f"{invoice_data.get_invoice_name()}.pdf"
                 st.success(f"Invoice saved to `{pdf_path}`")
@@ -315,7 +305,15 @@ def _tab_clients():
     if selected_key:
         c_data = clients[selected_key]
         st.subheader(f"Edit: {selected_key}")
-        is_co = c_data.get("type") == "company"
+        stored_type = c_data.get("type", "individual")
+        e_type = st.radio(
+            "Type",
+            ["Individual", "Company"],
+            index=1 if stored_type == "company" else 0,
+            horizontal=True,
+            key=f"e_type_{selected_key}",
+        )
+        is_co = e_type == "Company"
 
         e_ref_name = st.text_input("Reference name", value=selected_key, key=f"e_ref_name_{selected_key}")
 
@@ -338,7 +336,8 @@ def _tab_clients():
         if c1.button("Save changes", key="save_edit_c_btn"):
             entry = {
                 "type": "company" if is_co else "individual",
-                "name": e_ref_name, "email": e_email,
+                "name": e_company if is_co else e_ref_name,
+                "email": e_email,
                 "phone": e_phone or None, "website": e_website or None,
                 "address": e_addr,
             }
@@ -387,7 +386,8 @@ def _tab_clients():
         if st.button("Save client", key="save_new_c_btn"):
             entry = {
                 "type": "company" if is_company else "individual",
-                "name": save_key, "email": new_email,
+                "name": new_company_name if is_company else save_key,
+                "email": new_email,
                 "phone": new_phone or None, "website": new_website or None,
                 "address": new_addr,
             }
@@ -418,11 +418,32 @@ def _tab_sender():
     st.markdown("**Address**")
     addr = _address_form("sp", s.get("address", {}))
 
+    st.divider()
+    logo_path = st.text_input(
+        "Logo path (filesystem path to PNG/JPG)",
+        value=s.get("logo_path", "") or "",
+        key="sp_logo_path",
+        help="Absolute or relative path to your logo image. Used on every invoice.",
+    )
+    if logo_path and not Path(logo_path).is_file():
+        st.warning(f"Logo file not found: `{logo_path}`")
+    elif logo_path:
+        st.success(f"Logo found: `{logo_path}`")
+
+    footer_text = st.text_area(
+        "Footer text (legal notice, shown at bottom of every invoice)",
+        value=s.get("footer_text", "") or "",
+        key="sp_footer_text",
+        height=80,
+    )
+
     if st.button("Save sender profile", type="primary", key="save_sp_btn"):
         profile_store.save_sender({
             "siren": siren, "company": company, "name": name,
             "email": email, "phone": phone or None, "website": website or None,
             "address": addr,
+            "logo_path": logo_path or None,
+            "footer_text": footer_text or None,
         })
         st.success("Sender profile saved.")
 
