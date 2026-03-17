@@ -1,3 +1,5 @@
 .idea
 /official_invoices
 /config/fonts
+.DS_Store
+__pycache__
