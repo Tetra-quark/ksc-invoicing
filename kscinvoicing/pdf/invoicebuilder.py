@@ -171,9 +171,9 @@ def _build_invoice_info_schema(company_name: str,
     return tableschema
 
 
-def _contact_info_to_list(contact: CompanySender | IndividualRecipient) -> list:
+def _contact_info_to_list(contact: CompanySender | IndividualRecipient, use_contact_name: bool = False) -> list:
     """Put contact info object into a list to be inserted into invoice table."""
-    display_name = getattr(contact, "company_name", None) or contact.name
+    display_name = contact.name if use_contact_name else (getattr(contact, "company_name", None) or contact.name)
     details = [
         display_name,
         *contact.address.address_lines(),
@@ -188,7 +188,7 @@ def _contact_info_to_list(contact: CompanySender | IndividualRecipient) -> list:
 def _build_contact_details_schema(sender: CompanySender, recipient: IndividualRecipient) -> TableSchema:
     """ Inserts a table with sender and recipient personal information."""
 
-    sender_details = _contact_info_to_list(sender)
+    sender_details = _contact_info_to_list(sender, use_contact_name=True)
     recipient_details = _contact_info_to_list(recipient)
 
     table_shape = (6, 3)  # (rows, columns)
@@ -213,7 +213,7 @@ def _build_contact_details_schema(sender: CompanySender, recipient: IndividualRe
     tableschema = TableSchema(tabledata=tabledata,
                               column_widths=column_width_ratios,
                               bold_cells=bold_cells,
-                              font_size=Decimal(9))
+                              font_size=Decimal(12))
 
     return tableschema
 
