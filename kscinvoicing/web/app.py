@@ -244,7 +244,6 @@ def _tab_generate():
                     language=language,
                 )
                 borb_invoice.save()
-                invoice_data.log_invoice()
 
                 profile_store.record_line_items([
                     {"description": it["description"], "quantity": int(it["quantity"]),
