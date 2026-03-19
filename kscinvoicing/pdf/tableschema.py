@@ -18,6 +18,7 @@ class TableSchema:
     column_widths: list[Decimal]  # effectively these are ratios for a fixed width borb table
     bold_cells: list[tuple[int, int]]
     double_cells: list[tuple[int, int]] = field(default_factory=lambda: [])  # merges righthand cell with specified cell
+    font_size: Decimal = Decimal(12)
 
     def __post_init__(self):
 
@@ -57,7 +58,7 @@ class TableSchema:
                     continue
 
                 font = STYLE.title_font if (i, j) in self.bold_cells else STYLE.primary_font
-                text = Paragraph(val, font=font)
+                text = Paragraph(val, font=font, font_size=self.font_size)
 
                 if (i, j) in self.double_cells:
                     table.add(TableCell(text, column_span=2))

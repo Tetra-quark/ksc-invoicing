@@ -6,4 +6,23 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "borb==2.1.25",
+    "streamlit>=1.32",
 ]
+
+[project.scripts]
+kscinvoicing = "kscinvoicing.cli:cli"
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["kscinvoicing"]

@@ -4,6 +4,7 @@ from pathlib import Path
 from decimal import Decimal
 
 from kscinvoicing.info.party import CompanySender, IndividualRecipient
+from kscinvoicing.invoice.invoice_store import DB_PATH as _DEFAULT_DB_PATH
 from kscinvoicing.invoice.invoicelogger import InvoiceLogger
 
 
@@ -54,13 +55,14 @@ class InvoiceData:
         due_date: datetime = None,
         discount: Decimal = Decimal("0"),
         tax_rate: Decimal = Decimal("0"),
+        db_path: Path = None,
     ):
         self.sender = sender
         self.recipient = recipient
         self.items = items
 
         self.save_folder = Path(save_folder)
-        self.logger = InvoiceLogger(self.save_folder / "log.json")
+        self.logger = InvoiceLogger(db_path if db_path is not None else _DEFAULT_DB_PATH)
 
         self.date = date
         self.due_date = due_date
@@ -71,12 +73,7 @@ class InvoiceData:
         self.tax_rate = tax_rate
 
     def log_invoice(self):
-        self.logger.log_invoice(
-            date=self.date,
-            sender=self.sender.name,
-            recipient=self.recipient.name,
-            total=str(self.total),
-        )
+        self.logger.log_invoice(self)
 
     def get_invoice_name(self):
         return f"Invoice_{self.invoice_number}_{self.recipient.name.replace(' ', '-')}_{self.date.strftime('%Y-%m-%d')}"
