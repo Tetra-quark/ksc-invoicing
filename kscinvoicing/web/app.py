@@ -21,6 +21,7 @@ def _init_state():
     st.session_state.setdefault("line_items", [{"description": "", "desc_mode": "history", "quantity": 1, "price_per_unit": 0.0}])
     st.session_state.setdefault("generated_pdf_path", None)
     st.session_state.setdefault("delete_confirm", False)
+    st.session_state.setdefault("delete_invoice_confirm", None)
 
 
 # ---------------------------------------------------------------------------
@@ -486,7 +487,7 @@ def _tab_history():
 
     # Per-invoice rows
     for inv in filtered:
-        c1, c2, c3, c4, c5, c6 = st.columns([1, 2, 3, 2, 2, 2])
+        c1, c2, c3, c4, c5, c6, c7 = st.columns([1, 2, 3, 2, 2, 2, 1])
         c1.write(f"**#{inv['number']}**")
         c2.write(inv["date"] or "—")
         c3.write(inv["client_name"] or "—")
@@ -504,6 +505,21 @@ def _tab_history():
         else:
             if c6.button("Mark Paid", key=f"paid_{inv['id']}"):
                 invoice_store.update_invoice_status(inv["id"], "paid", profile_store.INVOICE_DB)
+                st.rerun()
+
+        if c7.button("🗑", key=f"del_{inv['id']}", help="Delete invoice"):
+            st.session_state["delete_invoice_confirm"] = inv["id"]
+
+        # Delete confirmation
+        if st.session_state.get("delete_invoice_confirm") == inv["id"]:
+            st.warning(f"Delete invoice **#{inv['number']}**? This cannot be undone.")
+            col1, col2 = st.columns(2)
+            if col1.button("Yes, delete", key=f"confirm_del_{inv['id']}"):
+                invoice_store.delete_invoice(inv["id"], profile_store.INVOICE_DB)
+                st.session_state.pop("delete_invoice_confirm", None)
+                st.rerun()
+            if col2.button("Cancel", key=f"cancel_del_{inv['id']}"):
+                st.session_state.pop("delete_invoice_confirm", None)
                 st.rerun()
 
         # Line items expander (only for invoices that have them)

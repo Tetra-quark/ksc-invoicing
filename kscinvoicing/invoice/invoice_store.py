@@ -117,6 +117,14 @@ def update_invoice_status(invoice_id: int, status: str, db_path: Path = DB_PATH)
         conn.commit()
 
 
+def delete_invoice(invoice_id: int, db_path: Path = DB_PATH) -> None:
+    """Delete an invoice and its line items from the DB."""
+    with sqlite3.connect(db_path) as conn:
+        conn.execute("DELETE FROM line_items WHERE invoice_id = ?", (invoice_id,))
+        conn.execute("DELETE FROM invoices WHERE id = ?", (invoice_id,))
+        conn.commit()
+
+
 def migrate_from_json(json_path: Path, db_path: Path = DB_PATH) -> int:
     """
     Import entries from a legacy log.json into the DB.
