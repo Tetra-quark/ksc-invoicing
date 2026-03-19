@@ -10,10 +10,35 @@ DATA_DIR = Path("kscinvoicing_data")
 SENDER_FILE = DATA_DIR / "sender.json"
 CLIENTS_FILE = DATA_DIR / "clients.json"
 LINE_ITEM_HISTORY_FILE = DATA_DIR / "line_item_history.json"
+INVOICE_DB = DATA_DIR / "invoices.db"
+
+# Legacy log.json files to migrate on first run
+_LEGACY_JSON_PATHS = [
+    Path("invoices/log.json"),
+    Path("log.json"),
+]
 
 
 def _ensure_data_dir():
     DATA_DIR.mkdir(exist_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# Invoice DB
+# ---------------------------------------------------------------------------
+
+def run_migration() -> int:
+    """
+    Initialise the invoice DB and import any legacy log.json files.
+    Idempotent — safe to call on every app start.
+    Returns the total number of newly migrated entries.
+    """
+    from kscinvoicing.invoice.invoice_store import init_db, migrate_from_json
+    init_db(INVOICE_DB)
+    total = 0
+    for path in _LEGACY_JSON_PATHS:
+        total += migrate_from_json(path, INVOICE_DB)
+    return total
 
 
 # ---------------------------------------------------------------------------

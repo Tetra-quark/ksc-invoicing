@@ -244,6 +244,7 @@ def _tab_generate():
                     language=language,
                 )
                 borb_invoice.save()
+                invoice_data.log_invoice()
 
                 profile_store.record_line_items([
                     {"description": it["description"], "quantity": int(it["quantity"]),
@@ -454,12 +455,80 @@ def _tab_sender():
 # Main
 # ---------------------------------------------------------------------------
 
+def _tab_history():
+    import kscinvoicing.invoice.invoice_store as invoice_store
+
+    invoices = invoice_store.get_all_invoices(profile_store.INVOICE_DB)
+
+    if not invoices:
+        st.info("No invoices logged yet. Generate an invoice to get started.")
+        return
+
+    status_filter = st.selectbox(
+        "Filter by status", ["All", "Unpaid", "Paid", "Overdue"], key="hist_status_filter"
+    )
+    filtered = (
+        invoices
+        if status_filter == "All"
+        else [i for i in invoices if i["status"] == status_filter.lower()]
+    )
+
+    if not filtered:
+        st.info(f"No {status_filter.lower()} invoices.")
+        return
+
+    # Summary metrics
+    total_sum = sum(i["total"] or 0 for i in filtered)
+    c1, c2 = st.columns(2)
+    c1.metric("Invoices", len(filtered))
+    c2.metric("Total", f"{total_sum:,.2f}")
+
+    st.divider()
+
+    # Per-invoice rows
+    for inv in filtered:
+        c1, c2, c3, c4, c5, c6 = st.columns([1, 2, 3, 2, 2, 2])
+        c1.write(f"**#{inv['number']}**")
+        c2.write(inv["date"] or "—")
+        c3.write(inv["client_name"] or "—")
+        currency = inv["currency"] or ""
+        c4.write(f"{inv['total']:,.2f} {currency}".strip() if inv["total"] is not None else "—")
+
+        status = inv["status"]
+        status_label = {"unpaid": "🔴 Unpaid", "paid": "🟢 Paid", "overdue": "🟡 Overdue"}.get(status, status)
+        c5.write(status_label)
+
+        if status == "paid":
+            if c6.button("Mark Unpaid", key=f"unpaid_{inv['id']}"):
+                invoice_store.update_invoice_status(inv["id"], "unpaid", profile_store.INVOICE_DB)
+                st.rerun()
+        else:
+            if c6.button("Mark Paid", key=f"paid_{inv['id']}"):
+                invoice_store.update_invoice_status(inv["id"], "paid", profile_store.INVOICE_DB)
+                st.rerun()
+
+        # Line items expander (only for invoices that have them)
+        line_items = invoice_store.get_invoice_line_items(inv["id"], profile_store.INVOICE_DB)
+        if line_items:
+            with st.expander("Line items"):
+                for li in line_items:
+                    st.write(
+                        f"- {li['description']} × {li['quantity']} @ "
+                        f"{li['price_per_unit']:.2f} = "
+                        f"{li['quantity'] * li['price_per_unit']:.2f}"
+                    )
+
+
 def main():
     st.set_page_config(page_title="KSC Invoicing", layout="wide")
     st.title("KSC Invoicing")
     _init_state()
 
-    tab1, tab2, tab3 = st.tabs(["Generate Invoice", "Manage Clients", "Sender Profile"])
+    migrated = profile_store.run_migration()
+    if migrated:
+        st.toast(f"Migrated {migrated} invoice(s) from legacy log files.")
+
+    tab1, tab2, tab3, tab4 = st.tabs(["Generate Invoice", "Manage Clients", "Sender Profile", "Invoice History"])
 
     with tab1:
         _tab_generate()
@@ -467,6 +536,8 @@ def main():
         _tab_clients()
     with tab3:
         _tab_sender()
+    with tab4:
+        _tab_history()
 
 
 if __name__ == "__main__":

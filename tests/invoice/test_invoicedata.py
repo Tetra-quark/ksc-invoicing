@@ -1,9 +1,10 @@
+import tempfile
 import unittest
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from invoice.invoicedata import LineItem, InvoiceData
+from kscinvoicing.invoice.invoicedata import LineItem, InvoiceData
 
 
 class TestLineItem(unittest.TestCase):
@@ -35,7 +36,6 @@ class TestLineItem(unittest.TestCase):
 
 class TestInvoiceData(unittest.TestCase):
 
-
     def setUp(self):
         self.line_items = [
             LineItem(description="Service A", quantity=2, price_per_unit=100.0),
@@ -47,21 +47,31 @@ class TestInvoiceData(unittest.TestCase):
         class Recipient:
             name: str
 
+        # Use a fresh temp DB so invoice number is always 0001
+        self._tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+        self._db_path = Path(self._tmp.name)
+
         self.invoice_data = InvoiceData(
             sender=None,
             recipient=Recipient(name="Bob Recipient"),
             items=self.line_items,
             date=self.invoice_date,
             save_folder=Path("./"),
+            currency="EUR",
             discount=50.0,
-            tax_rate=0.2
+            tax_rate=0.2,
+            db_path=self._db_path,
         )
+
+    def tearDown(self):
+        self._tmp.close()
+        self._db_path.unlink(missing_ok=True)
 
     def test_get_invoice_name(self):
         self.assertEqual("Invoice_0001_Bob-Recipient_2023-09-04", self.invoice_data.get_invoice_name())
 
     def test_subtotal(self):
-        for item in  self.invoice_data.items:
+        for item in self.invoice_data.items:
             print(item.description, item.price())
         self.assertEqual(400.0, self.invoice_data.subtotal)
 
@@ -76,4 +86,3 @@ class TestInvoiceData(unittest.TestCase):
         350 + 70 = 420
         """
         self.assertEqual(420.0, self.invoice_data.total)
-
